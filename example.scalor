@@ -17,4 +17,4 @@ if (isActive) {
 }
 
 val w: Float = 10*2/(12/5^2+1-9)
-print (w)
+print(w)

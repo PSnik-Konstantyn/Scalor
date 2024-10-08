@@ -1,8 +1,10 @@
-from Lexer import Lexer
+from Lexer import  ScalorLexer
 from config import lexer_config
 
 
-lexer: Lexer = Lexer(**lexer_config)
-
+interpreter = ScalorLexer()
 with open("example.scalor", "r", encoding="utf8") as source_code:
-    lexer.analyze(source_code.read())
+    tokens = interpreter.analyze(source_code)
+    print("Tokens:", tokens)
+
+    interpreter.parse()

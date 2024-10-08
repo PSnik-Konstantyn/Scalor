@@ -1,150 +1,147 @@
-from config import letters, digits, signs
-from utils import print_table
-from errors import IllegalSymbolError, LexerError
+class ScalorInterpreterError(Exception):
+    pass
 
+class ScalorLexer:
+    def __init__(self):
+        self.tokens = []
+        self.variables = {}
+        self.current_line = 1
 
-class Lexer:
-    _current_position: int = 0
-    _current_line: int = 1
-    _current_state: int = 0
-    _current_lexeme: str = 0
-    _source_code: str = None
-
-    _table_of_symbols: list = []
-    _table_of_identifiers: list = []
-    _table_of_constants: list = []
-
-    def __init__(self, token_table: dict, tok_state_table: dict, stf: dict, F: list, F_star: list, F_error: list,
-                 F_ignore: list, initial_state: int = 0):
-        self._token_table: dict = token_table
-        self._tok_state_table: dict = tok_state_table
-        self._stf: dict = stf
-        self._F: list = F
-        self._F_star: list = F_star
-        self._F_error: list = F_error
-        self._F_ignore: list = F_ignore
-        self._initial_state: int = initial_state
-        self._current_state = initial_state
-
-    def analyze(self, source_code: str):
-        self._source_code = source_code
-        self._current_position = -1
-        self._current_line = 1
-        self._current_lexeme = ""
-        self._table_of_symbols = []
-        self._table_of_identifiers = []
-        self._table_of_constants = []
-
-        while self._current_position < len(self._source_code) - 1:
-            next_char = self._get_next_char()
-            char_class = self._get_char_class(next_char)
-            self._current_state = self._get_next_state(self._current_state, char_class)
-
-            if self._is_final_state(self._current_state):
-                self._process_lexeme(next_char)
-            elif self._current_state == self._initial_state:
-                self._current_lexeme = ""
+    def analyze(self, source_code):
+        self.tokens = []
+        current_token = ''
+        for char in source_code:
+            if char in ' \n\t':
+                if current_token:
+                    self.tokens.append(current_token)
+                    current_token = ''
+                if char == '\n':
+                    self.current_line += 1
+            elif char in '+-*/^=(){}:,"':
+                if current_token:
+                    self.tokens.append(current_token)
+                    current_token = ''
+                self.tokens.append(char)
             else:
-                self._current_lexeme += next_char
+                current_token += char
 
-        # If source code doesn't end with ws or eol then lexeme will be incomplete, so we have to check this manually
-        if self._current_lexeme:
-            self._current_state = self._get_next_state(self._current_state, "other")
-            if self._is_final_state(self._current_state):
-                self._process_lexeme("")
+        if current_token:
+            self.tokens.append(current_token)
+        return self.tokens
 
-        print("Lexer finished successfully with following results:")
-        print(f"Table of symbols:")
-        print_table(self._table_of_symbols)
-        print(f"Table of identifiers: {self._table_of_identifiers}")
-        print(f"Table of constants:")
-        print_table(self._table_of_constants)
+    def parse(self):
+        self.current_token_index = 0
+        while self.current_token_index < len(self.tokens):
+            token = self._get_next_token()
+            if token == 'var':
+                self._variable_declaration()
+            elif token == 'val':
+                self._constant_declaration()
+            elif token == 'while':
+                self._while_loop()
+            elif token == 'if':
+                self._if_statement()
+            elif token == 'print':
+                self._print_statement()
+            else:
+                raise ScalorInterpreterError(f"Unknown token {token} at line {self.current_line}")
 
-    def _process_lexeme(self, next_char: str):
-        if self._current_state in self._F_ignore:
-            self._current_line += 1
-            self._current_lexeme = ""
-            self._current_state = self._initial_state
-        elif self._current_state in self._F_star:
-            token = self._get_token(self._current_state, self._current_lexeme)
-            index = None
-            if token == "id":
-                if self._current_lexeme not in self._table_of_identifiers:
-                    self._table_of_identifiers.append(self._current_lexeme)
-                index = self._table_of_identifiers.index(self._current_lexeme)
-            elif token in ["int", "float", "boolean"]:
-                if self._current_lexeme[-1] == ".":
-                    self._current_lexeme = self._current_lexeme[:-1]
-                    self._put_char_back()
-                if self._find_index_of_constant(self._current_lexeme) is None:
-                    self._table_of_constants.append({
-                        "type": token,
-                        "value": self._current_lexeme
-                    })
-                index = self._find_index_of_constant(self._current_lexeme)
+    def _variable_declaration(self):
+        var_name = self._get_next_token()
+        self._expect(':')
+        var_type = self._get_next_token()
+        self._expect('=')
+        var_value = self._evaluate_expression()
 
-            self._add_to_table_of_symbols(token, index)
-            self._put_char_back()
-            self._current_lexeme = ""
-            self._current_state = self._initial_state
-        elif self._current_state in self._F_error:
-            raise LexerError(self._current_line, self._current_state, self._current_lexeme)
-        elif self._current_state in self._F:
-            self._current_lexeme += next_char
-            token = self._get_token(self._current_state, self._current_lexeme)
-            self._add_to_table_of_symbols(token, None)
-            self._current_lexeme = ""
-            self._current_state = self._initial_state
+        self.variables[var_name] = var_value
+        print(f"Variable {var_name} of type {var_type} initialized with {var_value}")
 
-    def _is_final_state(self, state: int) -> bool:
-        return state in self._F
+    def _constant_declaration(self):
+        const_name = self._get_next_token()
+        self._expect(':')
+        const_type = self._get_next_token()
+        self._expect('=')
+        const_value = self._evaluate_expression()
 
-    def _get_next_state(self, state: int, char_class: str) -> int:
-        if (state, char_class) in self._stf.keys():
-            return self._stf[(state, char_class)]
-        elif (state, "other") in self._stf.keys():
-            return self._stf[(state, "other")]
+        self.variables[const_name] = const_value
+        print(f"Constant {const_name} of type {const_type} initialized with {const_value}")
+
+    def _while_loop(self):
+        condition = self._evaluate_expression()
+        self._expect('{')
+        while condition:
+            self._parse_block()
+            condition = self._evaluate_expression()
+
+    def _if_statement(self):
+        condition = self._evaluate_expression()
+        self._expect('{')
+        if condition:
+            self._parse_block()
         else:
-            raise LexerError(self._current_line, state, self._current_lexeme,
-                             f"No transition defined for state {state} and class {char_class}")
+            while self._get_next_token() != '}':
+                pass
 
-    def _get_next_char(self) -> str:
-        self._current_position += 1
-        return self._source_code[self._current_position]
+    def _print_statement(self):
+        value = self._get_next_token()
+        if value in self.variables:
+            print(self.variables[value])
+        else:
+            print(value)
 
-    def _put_char_back(self) -> None:
-        self._current_position -= 1
+    def _parse_block(self):
+        while self._get_next_token() != '}':
+            self.current_token_index -= 1
+            self.parse()
 
-    def _get_char_class(self, char: str) -> str:
-        if char == ".":
-            return "dot"
-        elif char in letters:
-            return "Letter"
-        elif char in digits:
-            return "Digit"
-        elif char in [" ", "\t"]:
-            return "ws"
-        elif char in "\n":
-            return "eol"
-        elif char in signs:
-            return char
-        raise IllegalSymbolError(char, self._current_line, self._current_lexeme)
+    def _evaluate_expression(self):
+        expression = self._get_next_token()
 
-    def _get_token(self, state: int, lexeme: str) -> str:
-        if lexeme in self._token_table:
-            return self._token_table[lexeme]
-        return self._tok_state_table[state]
+        if expression.startswith('"') and expression.endswith('"'):
+            return expression.strip('"')
 
-    def _find_index_of_constant(self, value):
-        temp_list = [item["value"] for item in self._table_of_constants]
-        if value in temp_list:
-            return temp_list.index(value)
-        return None
+        expression = expression.replace('true', 'True').replace('false', 'False')
 
-    def _add_to_table_of_symbols(self, token, index):
-        self._table_of_symbols.append({
-            "line": self._current_line,
-            "lexeme": self._current_lexeme,
-            "token": token,
-            "table_index": index
-        })
+        try:
+            return eval(expression)
+        except Exception as e:
+            raise ScalorInterpreterError(f"Error in expression: {expression}, {e}")
+
+    def _get_next_token(self):
+        token = self.tokens[self.current_token_index]
+        self.current_token_index += 1
+        return token
+
+    def _expect(self, expected_token):
+        token = self._get_next_token()
+        if token != expected_token:
+            raise ScalorInterpreterError(f"Expected '{expected_token}', but got '{token}'")
+
+
+
+source_code = """
+var x: Int = 10
+val y2: Float = 5.5
+var isActive: Boolean = true
+val message: String = "Hello, Scalor!"
+
+while (x > 0) {
+    print(x)
+    x = x - 1
+}
+
+if (isActive) {
+    print(message)
+} else {
+    print("Not active")
+}
+
+val w: Float = 10*2/(12/5^2+1-9)
+print(w)
+"""
+
+interpreter = ScalorLexer()
+tokens = interpreter.analyze(source_code)
+print("Tokens:", tokens)
+
+interpreter.parse()
