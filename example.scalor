@@ -1,7 +1,7 @@
-var x: Int = 10
-val y2: Float = 5.5
-var isActive: Boolean = true
-val message: String = "Hello, Scalor!"
+var x : Int = 10
+val y2 : Float = 5.5
+var isActive : Boolean = true
+val message : String = "Hello, Scalor!"
 
 // comment example
 
@@ -16,5 +16,5 @@ if (isActive) {
     print("Not active")
 }
 
-val w: Float = 10*2/(12/5^2+1-9)
+val w : Float = 10*2/(12/5^2+1-9)
 print(w)
