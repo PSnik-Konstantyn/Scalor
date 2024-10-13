@@ -10,7 +10,7 @@ tokenTable = {
 }
 
 tokStateTable = {
-    2: 'id', 4: 'int', 6: 'float', 8: 'comp_op', 9: 'assign_op', 23: 'string'
+    2: 'id', 4: 'int', 6: 'float', 8: 'comp_op', 9: 'assign_op', 13: 'par_op', 23: 'string'
 }
 
 stf = {
@@ -120,7 +120,7 @@ def processing():
     global state, lexeme, char, numLine, numChar, tableOfSymb
     lexeme = lexeme.strip()  # Видалити зайві пробіли з лексеми
 
-    if state in (13, 19):  # Перевірка символа нового рядка
+    if state in (14, 19):
         numLine += 1
         state = initState
 
@@ -150,7 +150,7 @@ def processing():
         numChar = putCharBack(numChar)
         state = initState
 
-    elif state == 12 or state == 14:
+    elif state == 12 or state == 13:
         lexeme += char
         lexeme = lexeme.strip()  # Видаляємо зайві пробіли
         token = getToken(state, lexeme)
