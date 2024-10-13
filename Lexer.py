@@ -1,16 +1,16 @@
 tokenTable = {
-    'program': 'keyword', 'end': 'keyword', ':=': 'assign_op',
-    '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'mult_op',
+    'program': 'keyword', 'end': 'keyword', '^': 'power_op',
+    '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'divide_op',
     '(': 'par_op', ')': 'par_op', '{': 'brace_op', '}': 'brace_op',
     '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'nl', '=': 'assign_op', ':': "type_op",
     'val': 'keyword', 'var': 'keyword', 'Int': 'type', 'Float': 'type',
     'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op', '!=': 'comp_op', '==': 'comp_op',
     'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string',
-    '!': 'not_op'  # додано оператор '!'
+    '!': 'not_op', 'true': 'keyword'
 }
 
 tokStateTable = {
-    2: 'id', 4: 'int', 6: 'float', 8: 'comp_op', 9: 'assign_op', 13: 'par_op', 23: 'string'
+    2: 'id', 4: 'int', 6: 'float', 8: 'comp_op', 9: 'assign_op', 13: 'par_op', 20: 'divide_op', 23: 'string'
 }
 
 stf = {
@@ -48,26 +48,30 @@ stf = {
     (0, ':'): 13,
     (0, ','): 13,
 
-    (0, '/'): 17,  # початок обробки оператора '/'
-    (17, '/'): 18,  # якщо два '/', це коментар
-    (17, 'OtherChar'): 13,  # якщо немає другого '/', це оператор ділення
+    (17, '/'): 18,
+    (17, 'OtherChar'): 20,
+    (17, 'Letter'): 20,
+    (17, 'Digit'): 20,
 
-    (18, 'OtherChar'): 18,  # продовжуємо коментар
-    (18, 'EndOfLine'): 19,  # кінець коментаря на кінці рядка
-    (0, 'EndOfLine'): 14,
+    (18, 'Letter'): 18,
+    (18, 'Digit'): 18,
+    (18, 'OtherChar'): 18,  # Коментар триває
+    (18, 'EndOfLine'): 19,  # Кінець коментаря на кінці рядка
     (19, 'OtherChar'): 0,
+    (20, 'Digit'): 0,
+    (0, 'EndOfLine'): 14,
 
-    (0, '"'): 21,  # початок обробки рядка
+    (0, '"'): 21,
     (21, 'Letter'): 21,
     (21, 'Digit'): 21,
     (21, 'Symbol'): 21,
     (21, 'WhiteSpace'): 21,
-    (21, '"'): 23,  # кінець рядка
+    (21, '"'): 23,
     (23, 'OtherChar'): 0,
 
-    (0, '!'): 13,  # додано оператор '!' як логічне заперечення
+    (0, '!'): 13,
 
-    (0, 'OtherChar'): 100,  # помилка для непередбачуваних символів
+    (0, 'OtherChar'): 100
 }
 
 F = {2, 4, 6, 8, 9, 11, 12, 13, 14, 19, 20, 23, 100, 102}
@@ -95,8 +99,6 @@ char = ''
 lexeme = ''
 
 
-# Лексичний аналізатор для мови 'Scalor'
-
 def lex():
     global state, numLine, char, lexeme, numChar, FSuccess
     try:
@@ -118,29 +120,27 @@ def lex():
 
 def processing():
     global state, lexeme, char, numLine, numChar, tableOfSymb
-    lexeme = lexeme.strip()  # Видалити зайві пробіли з лексеми
-
-    if state in (14, 19):
+    lexeme = lexeme.strip()
+    if state == 14:
         numLine += 1
         state = initState
-
-    elif state == 23:  # Обробка стрічкових літералів
-        lexeme = lexeme.strip('"')  # Видаляємо лише лапки
+    elif state == 23:
+        lexeme = lexeme.strip('"')
         token = getToken(state, lexeme)
+        if token != 'keyword' and token != 'type':
+            index = indexIdConst(state, lexeme)
+            if isinstance(index, tuple):
+                index = index[1]
         print(f'{numLine:<3d} "{lexeme}"   {token:<10s}')
         tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, '')
         lexeme = ''
         state = initState
-
-    elif state in (2, 4, 6, 8, 9):  # Обробка ідентифікаторів, чисел, операторів
+    elif state in (2, 4, 6, 8, 9):
         token = getToken(state, lexeme)
-        if token != 'keyword':
+        if token != 'keyword' and token != 'type':
             index = indexIdConst(state, lexeme)
-
-            # Check if index is a tuple and extract the correct value
             if isinstance(index, tuple):
-                index = index[1]  # Extract the index part of the tuple
-
+                index = index[1]
             print(f'{numLine:<3d} {lexeme:<10s} {token:<10s} {index:<5d}')
             tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, index)
         else:
@@ -149,10 +149,9 @@ def processing():
         lexeme = ''
         numChar = putCharBack(numChar)
         state = initState
-
-    elif state == 12 or state == 13:
+    elif state in (12, 13, 20):
         lexeme += char
-        lexeme = lexeme.strip()  # Видаляємо зайві пробіли
+        lexeme = lexeme.strip()
         token = getToken(state, lexeme)
         print(f'{numLine:<3d} {lexeme:<10s} {token:<10s}')
         tableOfSymb[len(tableOfSymb) + 1] = (numLine, lexeme, token, '')
@@ -161,6 +160,15 @@ def processing():
 
     if state in Ferror:
         fail()
+
+
+def nextState(state, classCh):
+    try:
+        return stf[(state, classCh)]
+    except KeyError:
+        if state in Ferror:
+            return state
+        return stf.get((state, 'OtherChar'), 100)
 
 
 def fail():
@@ -175,7 +183,7 @@ def fail():
 
 def getToken(state, lexeme):
     try:
-        if state == 23:  # Стрічковий літерал
+        if state == 23:
             return 'string'
         return tokenTable[lexeme]
     except KeyError:
@@ -184,15 +192,6 @@ def getToken(state, lexeme):
 
 def is_final(state):
     return state in F
-
-
-def nextState(state, classCh):
-    try:
-        return stf[(state, classCh)]
-    except KeyError:
-        if state in Ferror:
-            return state  # залишаємося в стані помилки
-        return stf.get((state, 'OtherChar'), 100)  # або перехід в стан помилки
 
 
 def nextChar():
@@ -224,12 +223,12 @@ def classOfChar(char):
 
 def indexIdConst(state, lexeme):
     indx = 0
-    if state == 2:  # Ідентифікатор
+    if state == 2:
         indx = tableOfId.get(lexeme)
         if indx is None:
             indx = len(tableOfId) + 1
             tableOfId[lexeme] = indx
-    if state in (4, 6):  # Константи Int та Float
+    if state in (4, 6, 23):
         indx = tableOfConst.get(lexeme)
         if indx is None:
             indx = len(tableOfConst) + 1
@@ -237,10 +236,8 @@ def indexIdConst(state, lexeme):
     return indx
 
 
-# Запуск лексичного аналізатора
 lex()
 
-# Виведення таблиць
 print('-' * 30)
 print(f'tableOfSymb: {tableOfSymb}')
 print(f'tableOfId: {tableOfId}')

@@ -16,7 +16,8 @@ if (isActive) {
     print("Not active")
 }
 
-val w : Float = 10*2/(12/5^2+1-9)
+val w : Float = 10 * 2 / 5 ^ 2
 print(w)
 
+val r : Boolean = 5 != 4
 
