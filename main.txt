@@ -19,5 +19,3 @@ if (isActive) {
 val w : Float = 10 * 2 / 5 ^ 2
 print(w)
 
-val r : Boolean = 5 != 4
-

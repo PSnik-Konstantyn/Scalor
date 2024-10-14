@@ -2,11 +2,11 @@ tokenTable = {
     'program': 'keyword', 'end': 'keyword', '^': 'power_op',
     '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'divide_op',
     '(': 'par_op', ')': 'par_op', '{': 'brace_op', '}': 'brace_op',
-    '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'nl', '=': 'assign_op', ':': "type_op",
+    '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'end', '=': 'assign_op', ':': "type_op",
     'val': 'keyword', 'var': 'keyword', 'Int': 'type', 'Float': 'type',
     'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op', '!=': 'comp_op', '==': 'comp_op',
     'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string',
-    '!': 'not_op', 'true': 'keyword'
+    '!': 'not_op', 'true': 'keyword', '//': 'comment'
 }
 
 tokStateTable = {
@@ -15,6 +15,7 @@ tokStateTable = {
 
 stf = {
     (0, 'WhiteSpace'): 0,
+    (0, 'end'): 14,
     (0, 'Letter'): 1,
     (1, 'Letter'): 1,
     (1, 'Digit'): 1,
@@ -26,7 +27,7 @@ stf = {
     (3, 'Dot'): 5,
     (5, 'Digit'): 5,
     (5, 'OtherChar'): 6,
-
+    (0, '!'): 13,
     (0, '>'): 7,
     (0, '<'): 7,
     (7, '='): 8,
@@ -35,7 +36,17 @@ stf = {
     (0, '='): 10,
     (10, '='): 11,
     (10, 'OtherChar'): 12,
+    (17, '/'): 18,
+    (17, 'OtherChar'): 20,
+    (17, 'Letter'): 20,
+    (17, 'Digit'): 20,
 
+    (18, 'Letter'): 18,
+    (18, 'Digit'): 18,
+    (18, 'OtherChar'): 18,
+    (18, 'end'): 19,
+    (19, 'OtherChar'): 0,
+    (20, 'Digit'): 0,
     (0, '+'): 13,
     (0, '-'): 13,
     (0, '*'): 13,
@@ -48,28 +59,12 @@ stf = {
     (0, ':'): 13,
     (0, ','): 13,
 
-    (17, '/'): 18,
-    (17, 'OtherChar'): 20,
-    (17, 'Letter'): 20,
-    (17, 'Digit'): 20,
-
-    (18, 'Letter'): 18,
-    (18, 'Digit'): 18,
-    (18, 'OtherChar'): 18,  # Коментар триває
-    (18, 'EndOfLine'): 19,  # Кінець коментаря на кінці рядка
-    (19, 'OtherChar'): 0,
-    (20, 'Digit'): 0,
-    (0, 'EndOfLine'): 14,
-
     (0, '"'): 21,
     (21, 'Letter'): 21,
     (21, 'Digit'): 21,
-    (21, 'Symbol'): 21,
     (21, 'WhiteSpace'): 21,
     (21, '"'): 23,
     (23, 'OtherChar'): 0,
-
-    (0, '!'): 13,
 
     (0, 'OtherChar'): 100
 }
@@ -88,7 +83,7 @@ state = initState
 FSuccess = ('Lexer', False)
 
 # Відкриваємо файл з кодом
-f = open('main.scalor', 'r')
+f = open('main.txt', 'r')
 sourceCode = f.read()
 f.close()
 
@@ -105,6 +100,9 @@ def lex():
         while numChar < lenCode:
             char = nextChar()
             classCh = classOfChar(char)
+            if char == '\n':
+                classCh = classOfChar('$')
+
             state = nextState(state, classCh)
             if is_final(state):
                 processing()
@@ -117,11 +115,27 @@ def lex():
     except SystemExit as e:
         print(f'Lexer: Аварійне завершення програми з кодом {e}')
 
+def classOfChar(char):
+    if char == '.':
+        return "Dot"
+    elif char.isalpha():
+        return "Letter"
+    elif char.isdigit():
+        return "Digit"
+    elif char.isspace():
+        return "WhiteSpace"
+    elif char in ['\n', '\r', '$']:
+        return "end"
+    elif char in "()+-*/{}^:=><\!\",":
+        return char
+    else:
+        return 'OtherChar'
+
 
 def processing():
     global state, lexeme, char, numLine, numChar, tableOfSymb
     lexeme = lexeme.strip()
-    if state == 14:
+    if state == 14 :
         numLine += 1
         state = initState
     elif state == 23:
@@ -202,24 +216,6 @@ def nextChar():
 
 def putCharBack(numChar):
     return numChar - 1
-
-
-def classOfChar(char):
-    if char == '.':
-        return "Dot"
-    elif char.isalpha():
-        return "Letter"
-    elif char.isdigit():
-        return "Digit"
-    elif char.isspace():
-        return "WhiteSpace"
-    elif char == '\n':
-        return "EndOfLine"
-    elif char in "()+-*/{}^:=><\!\",.":
-        return char
-    else:
-        return 'OtherChar'
-
 
 def indexIdConst(state, lexeme):
     indx = 0
