@@ -1,12 +1,11 @@
 tokenTable = {
-    'program': 'keyword', 'end': 'keyword', '^': 'power_op',
+    '^': 'power_op', '!=': 'comp_op',
     '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'divide_op',
     '(': 'par_op', ')': 'par_op', '{': 'brace_op', '}': 'brace_op',
     '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'end', '=': 'assign_op', ':': "type_op",
     'val': 'keyword', 'var': 'keyword', 'Int': 'type', 'Float': 'type',
-    'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op', '!=': 'comp_op', '==': 'comp_op',
-    'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string',
-    '!': 'not_op', 'true': 'keyword', '//': 'comment'
+    'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op',  '==': 'comp_op',
+    'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string', 'true': 'keyword', '//': 'comment'
 }
 
 tokStateTable = {
@@ -27,7 +26,13 @@ stf = {
     (3, 'Dot'): 5,
     (5, 'Digit'): 5,
     (5, 'OtherChar'): 6,
-    (0, '!'): 13,
+    (0, '!'): 15,
+    (15, '='): 16,
+    (15, 'OtherChar'): 102,
+    (15, 'Digit'): 102,
+    (15, 'Letter'): 102,
+    (16, 'WhiteSpace'): 0,
+
     (0, '>'): 7,
     (0, '<'): 7,
     (7, '='): 8,
@@ -82,7 +87,6 @@ tableOfSymb = {}
 state = initState
 FSuccess = ('Lexer', False)
 
-# Відкриваємо файл з кодом
 f = open('main.txt', 'r')
 sourceCode = f.read()
 f.close()
@@ -115,6 +119,7 @@ def lex():
     except SystemExit as e:
         print(f'Lexer: Аварійне завершення програми з кодом {e}')
 
+
 def classOfChar(char):
     if char == '.':
         return "Dot"
@@ -135,7 +140,7 @@ def classOfChar(char):
 def processing():
     global state, lexeme, char, numLine, numChar, tableOfSymb
     lexeme = lexeme.strip()
-    if state == 14 :
+    if state == 14:
         numLine += 1
         state = initState
     elif state == 23:
@@ -163,7 +168,7 @@ def processing():
         lexeme = ''
         numChar = putCharBack(numChar)
         state = initState
-    elif state in (12, 13, 20):
+    elif state in (12, 13, 20, 16):
         lexeme += char
         lexeme = lexeme.strip()
         token = getToken(state, lexeme)
@@ -216,6 +221,7 @@ def nextChar():
 
 def putCharBack(numChar):
     return numChar - 1
+
 
 def indexIdConst(state, lexeme):
     indx = 0
