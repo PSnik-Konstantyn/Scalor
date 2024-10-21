@@ -144,6 +144,11 @@ def classOfChar(char):
 def processing():
     global state, lexeme, char, numLine, numChar, tableOfSymb
     lexeme = lexeme.strip()
+    if state == 19:
+        lexeme = ''
+        state = initState
+        numLine += 1
+        return
     if state == 14:
         numLine += 1
         state = initState
