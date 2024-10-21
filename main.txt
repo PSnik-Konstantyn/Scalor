@@ -6,16 +6,17 @@ val message : String = "Hello Scalor"
 // comment example val y3 : Float = 5.5 перевірка лічильника
 
 while (x > 0) {
-    print(x)
-    x = x - 12.
+   print(x)
+   x = x - 12.
 }
 
+
 if (isActive) {
-    print(message)
+   print(message)
 } else {
-    print("Not active")
+   print("Not active")
 }
+
 
 val w : Float = 10 * 2 / 5 ^ 2
 print(w)
-

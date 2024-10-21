@@ -51,6 +51,10 @@ stf = {
     (18, 'OtherChar'): 18,
     (18, 'end'): 19,
     (19, 'OtherChar'): 0,
+    (19, 'Digit'): 0,
+    (19, 'Letter'): 0,
+    (19, 'WhiteSpace'): 0,
+
     (20, 'Digit'): 0,
     (0, '+'): 13,
     (0, '-'): 13,
