@@ -4,7 +4,7 @@ from Lexer import tableOfSymb
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
-        self.pos = 0
+        self.pos = 1
 
     def parse(self):
         """Основний метод для запуску парсингу програми."""
@@ -25,18 +25,31 @@ class Parser:
             self.expression()
 
     def variable_declaration(self):
-        """Парсер для оголошення змінних."""
-        keyword = self.consume('keyword')  # Очікується 'val' або 'var'
-        identifier = self.consume('id')
-        self.consume('assign_op', '=')  # Очікується оператор '='
-        expr = self.expression()
-        print(f"Variable declaration: {keyword} {identifier} = {expr}")
+        keyword_token = self.consume('keyword')
+
+        if keyword_token not in ['var', 'val']:
+            raise SyntaxError(f"Expected 'var' or 'val', got {keyword_token[1]}")
+
+        identifier = self.consume('id')  # Очікується ім'я змінної
+        self.consume('type_op', ':')  # Очікується ':'
+        var_type = self.consume('type')  # Очікується тип (Int, Float тощо)
+
+        # Якщо є оператор присвоєння, обробити його
+        if self.peek()[2] == 'assign_op':
+            self.consume('assign_op', '=')  # Очікується '='
+            expr = self.expression()  # Отримуємо вираз або значення для присвоєння
+
+            # Додаємо виведення інформації про оголошення змінної
+            print(f"Variable declaration: {keyword_token} {identifier} : {var_type} = {expr}")
+        else:
+            print(f"Variable declaration: {keyword_token} {identifier} : {var_type} (no assignment)")
 
     def expression(self):
         """Метод для розбору арифметичних або логічних виразів."""
         left = self.term()
-        while self.lookahead('add_op'):
-            operator = self.consume('add_op')
+        while self.lookahead('add_op') or self.lookahead('comp_op'):  # Додаємо перевірку порівняльних операторів
+            operator = self.consume('add_op') if self.lookahead('add_op') else self.consume(
+                'comp_op')  # Споживаємо оператор
             right = self.term()
             left = (operator, left, right)
         return left
@@ -51,13 +64,17 @@ class Parser:
         return left
 
     def factor(self):
-        """Метод для обробки окремих факторів (констант або ідентифікаторів)."""
+        """Method for handling individual factors (constants or identifiers)."""
         if self.lookahead('int'):
             return self.consume('int')
         elif self.lookahead('float'):
             return self.consume('float')
         elif self.lookahead('id'):
             return self.consume('id')
+        elif self.lookahead('keyword', 'true') or self.lookahead('keyword', 'false'):
+            return self.consume('keyword')
+        elif self.lookahead('string'):
+            return self.consume('string')  # Handle string tokens
         elif self.lookahead('par_op', '('):
             self.consume('par_op', '(')
             expr = self.expression()
@@ -79,15 +96,18 @@ class Parser:
         self.consume('brace_op', '}')
 
     def while_statement(self):
-        """Парсер для циклу."""
+        """Parser for while loop."""
         self.consume('keyword', 'while')
         self.consume('par_op', '(')
         condition = self.expression()
         self.consume('par_op', ')')
         self.consume('brace_op', '{')
         print(f"While loop with condition: {condition}")
+
         while not self.lookahead('brace_op', '}'):
-            self.statement()
+            print("-------")  # Print separator
+            self.statement()  # Parse and execute the statement inside the loop
+
         self.consume('brace_op', '}')
 
     def print_statement(self):
