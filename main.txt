@@ -7,9 +7,8 @@ val message : String = "Hello Scalor"
 
 while (x > 0) {
    print(x)
-   x = x - 12.
+   x = x - 12
 }
-
 
 if (isActive) {
    print(message)
@@ -18,5 +17,4 @@ if (isActive) {
 }
 
 
-val w : Float = 10 * 2 / 5 ^ 2
-print(w)
+val w : Float = 10 * (2 + 1) / 5 ^ 2
