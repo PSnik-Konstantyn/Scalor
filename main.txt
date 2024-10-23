@@ -14,7 +14,12 @@ if (isActive) {
    print(message)
 } else {
    print("Not active")
+   if (y2 <= 3 ) {
+       print(y2)
+   } else {
+       print("Smaller")
+   }
 }
 
-
-val w : Float = 10 * (2 + 1) / 5 ^ 2
+val w : Float = (10 * (2 + 1) / (5 * 2) ^ 2)
+print(w))

@@ -55,14 +55,26 @@ class Parser:
         print(f"Assignment: {identifier} = {expr}")
 
     def expression(self):
-        """Метод для разбора арифметических или логических выражений."""
+        """Метод для обработки арифметических или логических выражений."""
         left = self.term()
-        while self.lookahead('add_op') or self.lookahead('comp_op'):  # Добавляем проверку сравнительных операторов
-            operator = self.consume('add_op') if self.lookahead('add_op') else self.consume(
-                'comp_op')  # Потребляем оператор
+
+        # Добавляем поддержку операторов сравнения и сложения
+        while self.lookahead('comp_op') or self.lookahead_double_op() or self.lookahead('add_op'):
+            if self.lookahead_double_op():
+                operator = self.consume('comp_op')  # Двойные операторы сравнения (<=, >=, !=, ==)
+            elif self.lookahead('comp_op'):
+                operator = self.consume('comp_op')  # Операторы сравнения (<, >)
+            elif self.lookahead('add_op'):
+                operator = self.consume('add_op')  # Операторы сложения (+, -)
+            else:
+                raise SyntaxError(f"Unexpected token in expression: {self.peek()}")
+
             right = self.term()
-            left = (operator, left, right)
+            left = (left, operator, right)
+
         return left
+
+
 
     def term(self):
         """Метод для обробки множення/ділення."""
@@ -71,7 +83,7 @@ class Parser:
             operator = self.consume('mult_op') if self.lookahead('mult_op') else self.consume(
                 'divide_op')  # Обробляємо і '*' і '/'
             right = self.factor()
-            left = (operator, left, right)
+            left = (left, operator, right)
         return left
 
     def factor(self):
@@ -80,7 +92,7 @@ class Parser:
         while self.lookahead('power_op'):  # Handle the power operator '^'
             operator = self.consume('power_op')
             right = self.primary()  # Right side of the power operation
-            left = (operator, left, right)
+            left = (left, operator, right)
         return left
 
     def primary(self):
@@ -104,32 +116,34 @@ class Parser:
             raise SyntaxError(f"Unexpected token: {self.peek()}")
 
     def if_statement(self):
-        """Парсер для условных операторов."""
+        """Parser for if statements."""
         self.consume('keyword', 'if')
         self.consume('par_op', '(')
-        condition = self.expression()  # Условие в if
+        condition = self.expression()  # Condition in if
         self.consume('par_op', ')')
         self.consume('brace_op', '{')
         print(f"If statement with condition: {condition}")
 
-        # Обрабатываем тело if
+        # Process the body of if with one level of indentation
         while not self.lookahead('brace_op', '}'):
+            print("\t", end="")  # One tab for indentation
             self.statement()
         self.consume('brace_op', '}')
 
-        # Проверяем наличие else
+        # Check for the presence of else
         if self.lookahead('keyword', 'else'):
-            self.consume('keyword', 'else')  # Потребляем else
-            self.consume('brace_op', '{')  # Ожидаем открывающую фигурную скобку
-            print("Else statement:")
+            self.consume('keyword', 'else')  # Consume 'else'
+            self.consume('brace_op', '{')  # Expect opening brace
+            print("\t\tElse statement:")  # Two tabs for else
 
-            # Обрабатываем тело else
+            # Process the body of else with two levels of indentation
             while not self.lookahead('brace_op', '}'):
+                print("\t\t", end="")  # Two tabs for indentation
                 self.statement()
-            self.consume('brace_op', '}')  # Закрывающая фигурная скобка
+            self.consume('brace_op', '}')  # Closing brace
 
     def while_statement(self):
-        """Парсер для цикла while."""
+        """Parser for while loops."""
         self.consume('keyword', 'while')
         self.consume('par_op', '(')
         condition = self.expression()
@@ -137,32 +151,44 @@ class Parser:
         self.consume('brace_op', '{')
         print(f"While loop with condition: {condition}")
 
+        # Process the body of the while loop with one level of indentation
         while not self.lookahead('brace_op', '}'):
-            print("-------")  # Печатаем разделитель
-            self.statement()  # Парсим и выполняем оператор внутри цикла
+            print("\t", end="")  # One tab for indentation
+            self.statement()  # Parse and execute statements inside the loop
 
         self.consume('brace_op', '}')
 
     def print_statement(self):
-        # Oжидаем 'print' (уже должно быть найдено в statement)
+        # Expect 'print' keyword (already found in statement)
         self.consume('keyword', 'print')
 
-        # Ожидаем открывающую скобку '('
-        print(f"Текущий токен перед открывающей скобкой: {self.peek()}")  # Отладка
+        # Expect opening parenthesis '('
         self.consume('par_op', '(')
 
-        # Парсим аргумент для print (в твоем случае это переменная или строка)
-        print(f"Токен внутри скобок: {self.peek()}")  # Отладка
-        self.expression()  # Это твой метод для выражения
+        # Parse the argument for print (a variable or string in your case)
+        expr = self.expression()
 
-        # Ожидаем закрывающую скобку ')'
-        print(f"Текущий токен перед закрывающей скобкой: {self.peek()}")  # Отладка
+        # Expect closing parenthesis ')'
         self.consume('par_op', ')')
+        print(f"Print statement recognized with argument: {expr}")
 
-        print("Оператор print успешно распознан.")  # Успешное распознавание
+    def consume(self, token_type, lexeme=None):
+        """Получает следующий токен, если он соответствует ожидаемому типу/лексеме."""
+        if self.lookahead_double_op():
+            # Составной оператор (например, <=, >=)
+            current_token = self.tokens[self.pos][1] + self.tokens[self.pos + 1][1]  # Склеиваем составной оператор
+            self.pos += 2  # Увеличиваем позицию на 2, так как два токена были объединены
+            return current_token
+
+        if self.lookahead(token_type, lexeme):
+            current_token = self.tokens[self.pos]
+            self.pos += 1  # Увеличиваем позицию после успешного потребления токена
+            return current_token[1]
+
+        raise SyntaxError(f"Expected {token_type} '{lexeme}', got {self.peek()}")
 
     def lookahead(self, token_type, lexeme=None):
-        """Проверка следующего токена."""
+        """Перевірка наступного токена."""
         if self.pos < len(self.tokens):
             token = self.tokens[self.pos]
             if token[2] == token_type:
@@ -170,13 +196,17 @@ class Parser:
                     return True
         return False
 
-    def consume(self, token_type, lexeme=None):
-        """Получение следующего токена, если он соответствует ожидаемому типу/лексеме."""
-        if self.lookahead(token_type, lexeme):
+    def lookahead_double_op(self):
+        """Проверяет, если текущий оператор и следующий составляют двойной оператор сравнения."""
+        if self.pos + 1 < len(self.tokens):
             current_token = self.tokens[self.pos]
-            self.pos += 1
-            return current_token[1]
-        raise SyntaxError(f"Expected {token_type} '{lexeme}', got {self.peek()}")
+            next_token = self.tokens[self.pos + 1]
+
+            # Проверка на составные операторы сравнения: <=, >=, !=, ==
+            if current_token[1] in ['<', '>', '!', '='] and next_token[1] == '=':
+                return True
+        return False
+
 
     def peek(self):
         """Возвращает текущий токен."""
@@ -189,3 +219,4 @@ class Parser:
 tokens = [(1, 'val', 'keyword'), (1, 'x', 'id'), (1, '=', 'assign_op'), (1, '10', 'int'), (2, 'print', 'keyword'), (2, '(', 'par_op'), (2, 'x', 'id'), (2, ')', 'par_op')]
 parser = Parser(tableOfSymb)
 parser.parse()
+
