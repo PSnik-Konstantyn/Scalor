@@ -1,10 +1,10 @@
 tokenTable = {
-    '^': 'power_op', '!=': 'comp_op',
-    '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'divide_op',
+    '^': 'power_op', '!=': 'comp_op', '==': 'comp_op', '<=': 'comp_op', '>=': 'comp_op',  # Добавляем двухсимвольные операторы
+    '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'divide_op', '!': 'comp_op',
     '(': 'par_op', ')': 'par_op', '{': 'brace_op', '}': 'brace_op',
-    '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'end', '=': 'assign_op', ':': "type_op",
+    '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'end', '=': 'assign_op', ':': 'type_op',
     'val': 'keyword', 'var': 'keyword', 'Int': 'type', 'Float': 'type',
-    'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op',  '==': 'comp_op',
+    'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op',  # Одиночные операторы
     'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string', 'true': 'keyword', '//': 'comment'
 }
 
@@ -26,21 +26,19 @@ stf = {
     (3, 'Dot'): 5,
     (5, 'Digit'): 5,
     (5, 'OtherChar'): 6,
-    (0, '!'): 15,
-    (15, '='): 16,
-    (15, 'OtherChar'): 102,
-    (15, 'Digit'): 102,
-    (15, 'Letter'): 102,
-    (16, 'WhiteSpace'): 0,
 
     (0, '>'): 7,
     (0, '<'): 7,
-    (7, '='): 8,
-    (7, 'OtherChar'): 9,
+    (7, '='): 8,  # Переход для >= и <=
+    (7, 'OtherChar'): 9,  # Одиночный оператор < или >
 
     (0, '='): 10,
-    (10, '='): 11,
+    (10, '='): 11,  # Переход для == (двойное равно)
     (10, 'OtherChar'): 12,
+
+    (0, '!'): 15,
+    (15, '='): 16,
+
     (17, '/'): 18,
     (17, 'OtherChar'): 20,
     (17, 'Letter'): 20,
@@ -56,6 +54,12 @@ stf = {
     (19, 'WhiteSpace'): 0,
 
     (20, 'Digit'): 0,
+    (0, '!'): 15,
+    (15, '='): 16,
+    (15, 'OtherChar'): 102,
+    (15, 'Letter'): 102,
+    (15, 'Digit'): 102,
+
     (0, '+'): 13,
     (0, '-'): 13,
     (0, '*'): 13,
@@ -109,7 +113,10 @@ def lex():
             char = nextChar()
             classCh = classOfChar(char)
             if char == '\n':
-                classCh = classOfChar('$')
+                classCh = 'end'
+
+            if char == '!':
+                classCh = 'Digit'
 
             state = nextState(state, classCh)
             if is_final(state):
@@ -177,7 +184,7 @@ def processing():
         lexeme = ''
         numChar = putCharBack(numChar)
         state = initState
-    elif state in (12, 13, 20, 16):
+    elif state in (12, 11, 8, 13, 20, 16):
         lexeme += char
         lexeme = lexeme.strip()
         token = getToken(state, lexeme)
@@ -251,5 +258,5 @@ lex()
 
 print('-' * 30)
 print(f'tableOfSymb: {tableOfSymb}')
-# print(f'tableOfId: {tableOfId}')
-# print(f'tableOfConst: {tableOfConst}')
+print(f'tableOfId: {tableOfId}')
+print(f'tableOfConst: {tableOfConst}')

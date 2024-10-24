@@ -1,5 +1,8 @@
 from Lexer import tableOfSymb
 
+indent_level = 0
+
+
 
 class Parser:
     def __init__(self, tokens):
@@ -26,6 +29,8 @@ class Parser:
             self.assignment_statement()
         else:
             self.expression()
+
+
 
     def variable_declaration(self):
         keyword_token = self.consume('keyword')
@@ -55,26 +60,27 @@ class Parser:
         print(f"Assignment: {identifier} = {expr}")
 
     def expression(self):
-        """Метод для обработки арифметических или логических выражений."""
+        """Метод для обробки арифметичних або логічних виразів."""
         left = self.term()
 
-        # Добавляем поддержку операторов сравнения и сложения
+        # Додаємо підтримку операторів порівняння і арифметики
         while self.lookahead('comp_op') or self.lookahead_double_op() or self.lookahead('add_op'):
             if self.lookahead_double_op():
-                operator = self.consume('comp_op')  # Двойные операторы сравнения (<=, >=, !=, ==)
+                # Обробляємо подвійні оператори порівняння (==, !=)
+                operator = self.consume('comp_op')
             elif self.lookahead('comp_op'):
-                operator = self.consume('comp_op')  # Операторы сравнения (<, >)
+                # Обробляємо прості оператори порівняння (<, >)
+                operator = self.consume('comp_op')
             elif self.lookahead('add_op'):
-                operator = self.consume('add_op')  # Операторы сложения (+, -)
+                # Обробка арифметичних операторів (+, -)
+                operator = self.consume('add_op')
             else:
                 raise SyntaxError(f"Unexpected token in expression: {self.peek()}")
 
             right = self.term()
-            left = (left, operator, right)
+            left = (left, operator, right)  # Формуємо дерево виразу
 
         return left
-
-
 
     def term(self):
         """Метод для обробки множення/ділення."""
@@ -173,19 +179,20 @@ class Parser:
         print(f"Print statement recognized with argument: {expr}")
 
     def consume(self, token_type, lexeme=None):
-        """Получает следующий токен, если он соответствует ожидаемому типу/лексеме."""
+        """Отримує наступний токен, якщо він відповідає очікуваному типу/лексемі."""
         if self.lookahead_double_op():
-            # Составной оператор (например, <=, >=)
-            current_token = self.tokens[self.pos][1] + self.tokens[self.pos + 1][1]  # Склеиваем составной оператор
-            self.pos += 2  # Увеличиваем позицию на 2, так как два токена были объединены
+            # Обробка подвійних операторів (<=, >=, !=, ==)
+            current_token = self.tokens[self.pos][1] + self.tokens[self.pos + 1][1]
+            self.pos += 2  # Просуваємо позицію на 2 через подвійний оператор
             return current_token
 
         if self.lookahead(token_type, lexeme):
             current_token = self.tokens[self.pos]
-            self.pos += 1  # Увеличиваем позицию после успешного потребления токена
+            self.pos += 1  # Просування позиції після споживання токена
             return current_token[1]
 
-        raise SyntaxError(f"Expected {token_type} '{lexeme}', got {self.peek()}")
+        # Додаємо м'яке повідомлення про помилку, якщо очікуваний токен не знайдено
+        raise SyntaxError(f"Expected {token_type} '{lexeme}', but got {self.peek()}")
 
     def lookahead(self, token_type, lexeme=None):
         """Перевірка наступного токена."""
@@ -213,6 +220,10 @@ class Parser:
         if self.pos < len(self.tokens):
             return self.tokens[self.pos]
         return None
+
+    def print_with_indent(self, param):
+        print("\t" * indent_level + param)
+
 
 
 # Використання парсера з таблицею токенів з лексера
