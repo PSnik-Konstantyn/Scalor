@@ -18,8 +18,13 @@ if (isActive) {
        print(y2)
    } else {
        print("Smaller")
+       if (x-2 <= 0) {
+           print("x is greater")
+       } else {
+          y2 = x - 2 + 1
+       }
    }
 }
 
 val w : Float = (10 * (2 + 1) / (5 * 2) ^ 2)
-print(w))
+print(w)

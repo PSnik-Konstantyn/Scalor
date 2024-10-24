@@ -1,15 +1,15 @@
 tokenTable = {
-    '^': 'power_op', '!=': 'comp_op', '==': 'comp_op', '<=': 'comp_op', '>=': 'comp_op',  # Добавляем двухсимвольные операторы
+    '^': 'power_op', '!=': 'comp_op', '==': 'comp_op', '<=': 'comp_op', '>=': 'comp_op',
     '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'divide_op', '!': 'comp_op',
     '(': 'par_op', ')': 'par_op', '{': 'brace_op', '}': 'brace_op',
     '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'end', '=': 'assign_op', ':': 'type_op',
     'val': 'keyword', 'var': 'keyword', 'Int': 'type', 'Float': 'type',
-    'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op',  # Одиночные операторы
+    'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op',
     'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string', 'true': 'keyword', '//': 'comment'
 }
 
 tokStateTable = {
-    2: 'id', 4: 'int', 6: 'float', 8: 'comp_op', 9: 'assign_op', 13: 'par_op', 20: 'divide_op', 23: 'string'
+    2: 'id', 4: 'int', 6: 'float', 8: 'comp_op', 9: 'assign_op', 15: 'negative_op', 13: 'par_op', 20: 'divide_op', 23: 'string'
 }
 
 stf = {
@@ -29,11 +29,11 @@ stf = {
 
     (0, '>'): 7,
     (0, '<'): 7,
-    (7, '='): 8,  # Переход для >= и <=
-    (7, 'OtherChar'): 9,  # Одиночный оператор < или >
+    (7, '='): 8,
+    (7, 'OtherChar'): 9,
 
     (0, '='): 10,
-    (10, '='): 11,  # Переход для == (двойное равно)
+    (10, '='): 11,
     (10, 'OtherChar'): 12,
 
     (0, '!'): 15,
@@ -258,5 +258,5 @@ lex()
 
 print('-' * 30)
 print(f'tableOfSymb: {tableOfSymb}')
-print(f'tableOfId: {tableOfId}')
-print(f'tableOfConst: {tableOfConst}')
+# print(f'tableOfId: {tableOfId}')
+# print(f'tableOfConst: {tableOfConst}')
