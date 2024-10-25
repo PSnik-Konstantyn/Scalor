@@ -9,7 +9,6 @@ class Parser:
 
     def parse(self):
         while self.pos < len(self.tokens):
-            print(self.pos)
             self.statement()
 
     def statement(self):
@@ -181,10 +180,12 @@ class Parser:
         return None
 
     def print_with_indent(self, param):
-        print("\t" * indent_level + param)
+        line_number = self.tokens[self.pos - 1][0]
+        text = ":\t" + "\t" * indent_level + param
+        print(f"{line_number}{text}")
 
 
-tokens = [(1, 'val', 'keyword'), (1, 'x', 'id'), (1, '=', 'assign_op'), (1, '10', 'int'), (2, 'print', 'keyword'), (2, '(', 'par_op'), (2, 'x', 'id'), (2, ')', 'par_op')]
+
 parser = Parser(tableOfSymb)
 parser.parse()
 
