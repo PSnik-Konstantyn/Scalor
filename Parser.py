@@ -8,8 +8,13 @@ class Parser:
         self.pos = 1
 
     def parse(self):
-        while self.pos < len(self.tokens):
-            self.statement()
+        try:
+            while self.pos < len(self.tokens):
+                self.statement()
+        except SyntaxError as e:
+            print(f"Syntax Error at token {self.pos}: {e}")
+        except Exception as e:
+            print(f"Unexpected Error: {e}")
 
     def statement(self):
         if self.lookahead('keyword', 'val') or self.lookahead('keyword', 'var'):
@@ -23,55 +28,70 @@ class Parser:
         elif self.lookahead('id'):
             self.assignment_statement()
         else:
-            self.expression()
+            raise SyntaxError(f"Unknown statement starting at token {self.peek()}.")
 
     def variable_declaration(self):
-        keyword_token = self.consume('keyword')
-        identifier = self.consume('id')
-        self.consume('type_op', ':')
-        var_type = self.consume('type')
+        try:
+            keyword_token = self.consume('keyword')
+            identifier = self.consume('id')
+            self.consume('type_op', ':')
+            var_type = self.consume('type')
 
-        if self.peek()[2] == 'assign_op':
-            self.consume('assign_op', '=')
-            expr = self.expression()
-            self.print_with_indent(f"Variable declaration: {keyword_token} {identifier} : {var_type} = {expr}")
-        else:
-            self.print_with_indent(f"Variable declaration: {keyword_token} {identifier} : {var_type} (no assignment)")
+            if self.peek()[2] == 'assign_op':
+                self.consume('assign_op', '=')
+                expr = self.expression()
+                self.print_with_indent(f"Variable declaration: {keyword_token} {identifier} : {var_type} = {expr}")
+            else:
+                self.print_with_indent(f"Variable declaration: {keyword_token} {identifier} : {var_type} (no assignment)")
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in variable declaration: {e}")
 
     def assignment_statement(self):
-        identifier = self.consume('id')
-        self.consume('assign_op', '=')
-        expr = self.expression()
-        self.print_with_indent(f"Assignment: {identifier} = {expr}")
+        try:
+            identifier = self.consume('id')
+            self.consume('assign_op', '=')
+            expr = self.expression()
+            self.print_with_indent(f"Assignment: {identifier} = {expr}")
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in assignment: {e}")
 
     def expression(self):
-        left = self.term()
-        while self.lookahead('comp_op') or self.lookahead_double_op() or self.lookahead('add_op'):
-            if self.lookahead_double_op():
-                operator = self.consume('comp_op')
-            elif self.lookahead('comp_op'):
-                operator = self.consume('comp_op')
-            elif self.lookahead('add_op'):
-                operator = self.consume('add_op')
-            right = self.term()
-            left = (left, operator, right)
-        return left
+        try:
+            left = self.term()
+            while self.lookahead('comp_op') or self.lookahead_double_op() or self.lookahead('add_op'):
+                if self.lookahead_double_op():
+                    operator = self.consume('comp_op')
+                elif self.lookahead('comp_op'):
+                    operator = self.consume('comp_op')
+                elif self.lookahead('add_op'):
+                    operator = self.consume('add_op')
+                right = self.term()
+                left = (left, operator, right)
+            return left
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in expression: {e}")
 
     def term(self):
-        left = self.factor()
-        while self.lookahead('mult_op') or self.lookahead('divide_op'):
-            operator = self.consume('mult_op') if self.lookahead('mult_op') else self.consume('divide_op')
-            right = self.factor()
-            left = (left, operator, right)
-        return left
+        try:
+            left = self.factor()
+            while self.lookahead('mult_op') or self.lookahead('divide_op'):
+                operator = self.consume('mult_op') if self.lookahead('mult_op') else self.consume('divide_op')
+                right = self.factor()
+                left = (left, operator, right)
+            return left
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in term: {e}")
 
     def factor(self):
-        left = self.primary()
-        while self.lookahead('power_op'):
-            operator = self.consume('power_op')
-            right = self.primary()
-            left = (left, operator, right)
-        return left
+        try:
+            left = self.primary()
+            while self.lookahead('power_op'):
+                operator = self.consume('power_op')
+                right = self.primary()
+                left = (left, operator, right)
+            return left
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in factor: {e}")
 
     def primary(self):
         if self.lookahead('add_op', '-') and self.lookahead_next_is_numeric():
@@ -94,33 +114,22 @@ class Parser:
             self.consume('par_op', ')')
             return expr
         else:
-            raise SyntaxError(f"Unexpected token: {self.peek()}")
+            raise SyntaxError(f"Unexpected token in primary expression: {self.peek()}")
 
     def lookahead_next_is_numeric(self):
         return (self.pos + 1 < len(self.tokens) and
                 (self.tokens[self.pos + 1][2] == 'int' or self.tokens[self.pos + 1][2] == 'float'))
 
     def if_statement(self):
-        global indent_level
-        self.consume('keyword', 'if')
-        self.consume('par_op', '(')
-        condition = self.expression()
-        self.consume('par_op', ')')
-        self.consume('brace_op', '{')
-
-        self.print_with_indent(f"If statement with condition: {condition}")
-        indent_level += 1
-
-        while not self.lookahead('brace_op', '}'):
-            self.statement()
-        self.consume('brace_op', '}')
-        indent_level -= 1
-
-        if self.lookahead('keyword', 'else'):
-            self.consume('keyword', 'else')
+        try:
+            global indent_level
+            self.consume('keyword', 'if')
+            self.consume('par_op', '(')
+            condition = self.expression()
+            self.consume('par_op', ')')
             self.consume('brace_op', '{')
 
-            self.print_with_indent(f"Else statement:")
+            self.print_with_indent(f"If statement with condition: {condition}")
             indent_level += 1
 
             while not self.lookahead('brace_op', '}'):
@@ -128,31 +137,49 @@ class Parser:
             self.consume('brace_op', '}')
             indent_level -= 1
 
+            if self.lookahead('keyword', 'else'):
+                self.consume('keyword', 'else')
+                self.consume('brace_op', '{')
+                self.print_with_indent(f"Else statement:")
+                indent_level += 1
+
+                while not self.lookahead('brace_op', '}'):
+                    self.statement()
+                self.consume('brace_op', '}')
+                indent_level -= 1
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in if-statement: {e}")
+
     def while_statement(self):
-        global indent_level
-        self.consume('keyword', 'while')
-        self.consume('par_op', '(')
-        condition = self.expression()
-        self.consume('par_op', ')')
-        self.consume('brace_op', '{')
+        try:
+            global indent_level
+            self.consume('keyword', 'while')
+            self.consume('par_op', '(')
+            condition = self.expression()
+            self.consume('par_op', ')')
+            self.consume('brace_op', '{')
 
-        self.print_with_indent(f"While loop with condition: {condition}")
-        indent_level += 1
+            self.print_with_indent(f"While loop with condition: {condition}")
+            indent_level += 1
 
-        while not self.lookahead('brace_op', '}'):
-            self.statement()
-        self.consume('brace_op', '}')
-        indent_level -= 1
+            while not self.lookahead('brace_op', '}'):
+                self.statement()
+            self.consume('brace_op', '}')
+            indent_level -= 1
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in while-statement: {e}")
 
     def print_statement(self):
-        self.consume('keyword', 'print')
-        self.consume('par_op', '(')
-        expr = self.expression()
-        self.consume('par_op', ')')
-        self.print_with_indent(f"Print statement recognized with argument: {expr}")
+        try:
+            self.consume('keyword', 'print')
+            self.consume('par_op', '(')
+            expr = self.expression()
+            self.consume('par_op', ')')
+            self.print_with_indent(f"Print statement recognized with argument: {expr}")
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in print statement: {e}")
 
     def consume(self, token_type, lexeme=None):
-
         if self.lookahead_double_op():
             current_token = self.tokens[self.pos][1] + self.tokens[self.pos + 1][1]
             self.pos += 2
@@ -192,8 +219,5 @@ class Parser:
         text = ":\t" + "\t" * indent_level + param
         print(f"{line_number}{text}")
 
-
-
 parser = Parser(tableOfSymb)
 parser.parse()
-
