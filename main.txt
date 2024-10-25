@@ -14,7 +14,7 @@ if (isActive) {
    print(message)
 } else {
    print("Not active")
-   if (y2 >= 3 ) {
+   if (y2 >= -3 ) {
        print(y2)
    } else {
        print("Smaller")

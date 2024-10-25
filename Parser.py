@@ -74,6 +74,10 @@ class Parser:
         return left
 
     def primary(self):
+        if self.lookahead('add_op', '-') and self.lookahead_next_is_numeric():
+            self.consume('add_op', '-')
+            return f"-{self.primary()}"
+
         if self.lookahead('int'):
             return self.consume('int')
         elif self.lookahead('float'):
@@ -91,6 +95,10 @@ class Parser:
             return expr
         else:
             raise SyntaxError(f"Unexpected token: {self.peek()}")
+
+    def lookahead_next_is_numeric(self):
+        return (self.pos + 1 < len(self.tokens) and
+                (self.tokens[self.pos + 1][2] == 'int' or self.tokens[self.pos + 1][2] == 'float'))
 
     def if_statement(self):
         global indent_level
