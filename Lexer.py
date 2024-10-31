@@ -97,6 +97,7 @@ FSuccess = ('Lexer', False)
 
 f = open('main.txt', 'r')
 sourceCode = f.read()
+sourceCode += '\n'
 f.close()
 
 lenCode = len(sourceCode) - 1

@@ -85,9 +85,9 @@ class Parser:
     def factor(self):
         try:
             left = self.primary()
-            while self.lookahead('power_op'):
+            if self.lookahead('power_op'):
                 operator = self.consume('power_op')
-                right = self.primary()
+                right = self.factor()
                 left = (left, operator, right)
             return left
         except SyntaxError as e:
@@ -120,12 +120,35 @@ class Parser:
         return (self.pos + 1 < len(self.tokens) and
                 (self.tokens[self.pos + 1][2] == 'int' or self.tokens[self.pos + 1][2] == 'float'))
 
+    def comparison_expression(self):
+        try:
+            left = self.expression_part()
+            if self.lookahead('comp_op'):
+                operator = self.consume('comp_op')
+                right = self.expression_part()
+                return (left, operator, right)
+            else:
+                raise SyntaxError("Expected comparison operator in if/while condition.")
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in comparison expression: {e}")
+
+    def expression_part(self):
+        try:
+            left = self.term()
+            while self.lookahead('add_op'):
+                operator = self.consume('add_op')
+                right = self.term()
+                left = (left, operator, right)
+            return left
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in expression part: {e}")
+
     def if_statement(self):
         try:
             global indent_level
             self.consume('keyword', 'if')
             self.consume('par_op', '(')
-            condition = self.expression()
+            condition = self.comparison_expression()
             self.consume('par_op', ')')
             self.consume('brace_op', '{')
 
@@ -155,7 +178,7 @@ class Parser:
             global indent_level
             self.consume('keyword', 'while')
             self.consume('par_op', '(')
-            condition = self.expression()
+            condition = self.comparison_expression()
             self.consume('par_op', ')')
             self.consume('brace_op', '{')
 
