@@ -1,0 +1,87 @@
+Program = DeclSection DoSection
+Ident = Letter {Letter | Digit}
+
+DeclSection = DeclarList
+DeclarList = Declaration {',' Declaration}
+Declaration = (VarDecl | ValDecl)
+VarDecl = 'var' IdentList ':' Type ['=' Expression]
+ValDecl = 'val' IdentList ':' Type ['=' Expression]
+
+IdentList = Ident {',' Ident}
+
+Type = IntType | FloatType | BoolType | StringType
+IntType = 'Int'
+FloatType = 'Float'
+BoolType = 'Boolean'
+StringType = 'String'
+
+DoSection = StatementList
+StatementList = Statement {Statement}
+
+Statement = Assign
+          | IfStatement
+          | WhileStatement
+          | PrintStatement
+          | FunctionDef
+          | FunctionCall
+
+Assign = Ident '=' Expression
+
+IfStatement = 'if' '(' Expression ')' DoBlock ['else' DoBlock]
+WhileStatement = 'while' '(' Expression ')' DoBlock
+PrintStatement = 'print' '(' Expression ')'
+
+ParamList = Param {',' Param}
+Param = Ident ':' Type
+
+Expression = ArithmExpression
+           | BoolExpr
+           | ConcatExpression
+
+BoolExpr = ArithmExpression RelOp ArithmExpression
+         | 'true'
+         | 'false'
+         | '(' BoolExpr ')'
+
+ArithmExpression = [-] Term
+                 | ArithmExpression '+' Term
+                 | ArithmExpression '-' Term
+                 | Term '^' ArithmExpression
+
+Term = Factor
+     | Term '*' Factor
+     | Term '/' Factor
+
+Factor = Ident
+       | Const
+       | '(' ArithmExpression ')'
+
+ConcatExpression = StringConst '+' (StringConst | Ident)
+
+DoBlock = Statement | '{' StatementList '}'
+
+Comment = '//' {AnyCharacter} EndOfLine
+
+Const = IntNumb | FloatNumb | BoolConst
+IntNumb = [ArthOp] UnsignedInt
+FloatNumb = [ArthOp] UnsignedFloat
+BoolConst = 'true' | 'false'
+StringConst = '"' {Letter | Digit | Symbol} '"'
+
+UnsignedInt = Digit {Digit}
+UnsignedFloat = UnsignedInt '.' UnsignedInt
+
+RelOp = '==' | '!=' | '<' | '>' | '<=' | '>='
+ArthOp = '+' | '-'
+MultOp = '*' | '/'
+PowerOp = '^'
+AssignOp = '='
+
+
+Letter = "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
+    "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
+    "S", "T", "U", "V", "W", "X", "Y", "Z"
+Digit = = ’0’ | ’1’ | ’2’ | ’3’ | ’4’ | ’5’ | ’6’ | ’7’ | ’8’ | ’9’
+Symbol = '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(' | ')' | '-' | ‘ ’ | ‘/’ | ‘“’ | ‘’’ | EndOfLine | '.' | ',' |
+':'
+
