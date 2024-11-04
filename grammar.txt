@@ -4,10 +4,8 @@ Ident = Letter {Letter | Digit}
 DeclSection = DeclarList
 DeclarList = Declaration {',' Declaration}
 Declaration = (VarDecl | ValDecl)
-VarDecl = 'var' IdentList ':' Type ['=' Expression]
-ValDecl = 'val' IdentList ':' Type ['=' Expression]
-
-IdentList = Ident {',' Ident}
+VarDecl = 'var' Ident ':' Type ['=' Expression]
+ValDecl = 'val' Ident ':' Type ['=' Expression]
 
 Type = IntType | FloatType | BoolType | StringType
 IntType = 'Int'
@@ -22,17 +20,12 @@ Statement = Assign
           | IfStatement
           | WhileStatement
           | PrintStatement
-          | FunctionDef
-          | FunctionCall
 
 Assign = Ident '=' Expression
 
 IfStatement = 'if' '(' Expression ')' DoBlock ['else' DoBlock]
 WhileStatement = 'while' '(' Expression ')' DoBlock
 PrintStatement = 'print' '(' Expression ')'
-
-ParamList = Param {',' Param}
-Param = Ident ':' Type
 
 Expression = ArithmExpression
            | BoolExpr
@@ -62,9 +55,9 @@ DoBlock = Statement | '{' StatementList '}'
 
 Comment = '//' {AnyCharacter} EndOfLine
 
-Const = IntNumb | FloatNumb | BoolConst
-IntNumb = [ArthOp] UnsignedInt
-FloatNumb = [ArthOp] UnsignedFloat
+Const = IntNumb | FloatNumb | BoolConst | StringConst
+IntNumb = [-] UnsignedInt
+FloatNumb = [-] UnsignedFloat
 BoolConst = 'true' | 'false'
 StringConst = '"' {Letter | Digit | Symbol} '"'
 
@@ -76,7 +69,6 @@ ArthOp = '+' | '-'
 MultOp = '*' | '/'
 PowerOp = '^'
 AssignOp = '='
-
 
 Letter = "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
     "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
