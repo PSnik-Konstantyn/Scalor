@@ -259,5 +259,5 @@ lex()
 
 print('-' * 30)
 print(f'tableOfSymb: {tableOfSymb}')
-# print(f'tableOfId: {tableOfId}')
-# print(f'tableOfConst: {tableOfConst}')
+print(f'tableOfId: {tableOfId}')
+print(f'tableOfConst: {tableOfConst}')

@@ -1,9 +1,9 @@
-var x : Int = 10
+val x : Int = 10
 val y2 : Float = 5.5
 var isActive : Boolean = 5 == 4
 val message : String = "Hello Scalor"
 
-// comment example val y3 : Float = 5.5 перевірка
+// comment example val y3 : Float = 5.5 перевірка var не працює, = вважає змінною, нема перевірки типів
 
 while (x != 0) {
    print(x)
