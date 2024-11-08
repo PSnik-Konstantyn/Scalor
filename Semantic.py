@@ -5,12 +5,12 @@ class Semantic:
         self.symbols_table = symbols_table
         self.variables = {}
         self.errors = []
-        self.current_index = 1  # Текущий индекс в таблице символов
+        self.current_index = 1
 
     def analyze(self):
         for entry in self.symbols_table:
             line, lexeme, token_type, additional = entry
-            self.current_index = self.symbols_table.index(entry)  # Обновляем текущий индекс
+            self.current_index = self.symbols_table.index(entry)
 
             if token_type == "id":
                 if lexeme not in self.variables:
@@ -35,7 +35,7 @@ class Semantic:
 
     def handle_declaration(self, line, decl_type):
         var_name = self.get_next_token("id")
-        self.get_next_token("type_op")  # Пропускаем оператор типа ':'
+        self.get_next_token("type_op")
         var_type = self.get_next_token("type")
 
         if var_name is None or var_type is None:
@@ -47,7 +47,7 @@ class Semantic:
         else:
             self.variables[var_name] = {
                 "type": var_type,
-                "initialized": decl_type == "val",
+                "initialized": decl_type == "val" or decl_type == "var",
                 "immutable": decl_type == "val"
             }
 
@@ -85,7 +85,6 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
 
     def get_next_token(self, expected=None):
-        """Возвращает следующую лексему в зависимости от ожидаемого типа."""
         self.current_index += 1
         if self.current_index < len(self.symbols_table):
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
@@ -95,7 +94,6 @@ class Semantic:
         return None
 
     def get_previous_token(self, expected=None):
-        """Возвращает предыдущую лексему в зависимости от ожидаемого типа."""
         if self.current_index > 0:
             self.current_index -= 1
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
@@ -110,7 +108,7 @@ class Semantic:
         while self.current_index < len(self.symbols_table):
             _, lexeme, token_type, additional = self.symbols_table[self.current_index]
 
-            if token_type == "comp_op":  # Проверка на операцию сравнения
+            if token_type == "comp_op":
                 expr_type = "boolean"
                 break
 
@@ -118,18 +116,16 @@ class Semantic:
                 expr_type = lexeme
 
             self.current_index += 1
-        self.current_index = expr_start  # Сброс индекса
+        self.current_index = expr_start
         return expr_type or "unknown"
 
     def get_operand_type(self):
-        """Возвращает тип операнда для бинарной операции."""
         operand = self.get_next_token()
         if operand in self.variables:
             return self.variables[operand]["type"]
         return "unknown"
 
     def get_operand_value(self):
-        """Возвращает значение операнда, в основном для проверки деления на ноль."""
         operand = self.get_next_token()
         if operand.isdigit():
             return int(operand)
@@ -137,6 +133,6 @@ class Semantic:
             return self.variables[operand].get("value", None)
         return None
 
-# Пример вызова анализатора с таблицей символов
+# Example usage
 analyzer = Semantic(list(tableOfSymb.values()))
 analyzer.analyze()
