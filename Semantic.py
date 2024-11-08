@@ -1,5 +1,7 @@
 from Lexer import tableOfSymb
 
+from Lexer import tableOfSymb
+
 class Semantic:
     def __init__(self, symbols_table):
         self.symbols_table = symbols_table
@@ -43,7 +45,10 @@ class Semantic:
             return
 
         if var_name in self.variables:
-            self.errors.append(f"Error on line {line}: Variable '{var_name}' redeclared.")
+            if self.variables[var_name]["immutable"]:
+                self.errors.append(f"Error on line {line}: Variable '{var_name}' is immutable and cannot be redeclared.")
+            else:
+                self.errors.append(f"Error on line {line}: Variable '{var_name}' redeclared.")
         else:
             self.variables[var_name] = {
                 "type": var_type,
@@ -58,6 +63,7 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Variable '{var_name}' used before declaration.")
             return
 
+        # Проверка на неизменяемость переменной 'val'
         if self.variables[var_name]["immutable"]:
             self.errors.append(f"Error on line {line}: Cannot assign to immutable variable '{var_name}'.")
             return
@@ -73,8 +79,9 @@ class Semantic:
         left_operand_type = self.get_operand_type()
         right_operand_type = self.get_operand_type()
 
-        if left_operand_type != right_operand_type:
-            self.errors.append(f"Error on line {line}: Type mismatch in operation '{operator}'.")
+        if operator in ["+", "-", "*", "/"]:
+            if left_operand_type != right_operand_type:
+                self.errors.append(f"Error on line {line}: Type mismatch in operation '{operator}'.")
 
         if operator == "/" and right_operand_type == "int" and self.get_operand_value() == 0:
             self.errors.append(f"Error on line {line}: Division by zero.")

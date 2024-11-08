@@ -1,5 +1,5 @@
 val x : Int = 10
-val y2 : Float = 5.5
+var y2 : Float = 5.5
 var isActive : Boolean = 5 == 4
 val message : String = "Hello Scalor"
 
