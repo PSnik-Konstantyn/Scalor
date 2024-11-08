@@ -1,17 +1,16 @@
 from Lexer import tableOfSymb
 
-
 class Semantic:
     def __init__(self, symbols_table):
         self.symbols_table = symbols_table
         self.variables = {}
         self.errors = []
-        self.current_index = 1  # To keep track of position in the symbols table
+        self.current_index = 1  # Текущий индекс в таблице символов
 
     def analyze(self):
         for entry in self.symbols_table:
             line, lexeme, token_type, additional = entry
-            self.current_index = self.symbols_table.index(entry)  # Set index for current entry
+            self.current_index = self.symbols_table.index(entry)  # Обновляем текущий индекс
 
             if token_type == "id":
                 if lexeme not in self.variables:
@@ -19,13 +18,13 @@ class Semantic:
                 elif not self.variables[lexeme]["initialized"]:
                     self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before initialization.")
             elif token_type == "keyword":
-                if lexeme == "val" or lexeme == "var":
+                if lexeme in ["val", "var"]:
                     self.handle_declaration(line, lexeme)
-                elif lexeme == "if" or lexeme == "while":
+                elif lexeme in ["if", "while"]:
                     self.handle_control_structure(line, lexeme)
-            elif token_type == "assign_op":
-                self.handle_assignment(line, lexeme)
-            elif token_type in ["add_op", "mult_op", "divide_op"]:
+            elif token_type == "assign_op" and lexeme == ':=':
+                self.handle_assignment(line)
+            elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
                 self.handle_operation(line, lexeme)
 
         if self.errors:
@@ -36,10 +35,11 @@ class Semantic:
 
     def handle_declaration(self, line, decl_type):
         var_name = self.get_next_token("id")
+        self.get_next_token("type_op")  # Пропускаем оператор типа ':'
         var_type = self.get_next_token("type")
 
         if var_name is None or var_type is None:
-            self.errors.append(f"Error on line {line}: Declaration is incomplete.")
+            self.errors.append(f"Error on line {line}: Incomplete declaration.")
             return
 
         if var_name in self.variables:
@@ -51,25 +51,23 @@ class Semantic:
                 "immutable": decl_type == "val"
             }
 
-    def handle_assignment(self, line, lexeme):
-        # Проверяем, существует ли переменная в словаре
-        if lexeme not in self.variables:
-            self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before declaration.")
+    def handle_assignment(self, line):
+        var_name = self.get_previous_token("id")
+
+        if var_name not in self.variables:
+            self.errors.append(f"Error on line {line}: Variable '{var_name}' used before declaration.")
             return
 
-        # Проверяем, была ли переменная инициализирована
-        if not self.variables[lexeme]["initialized"]:
-            self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before initialization.")
+        if self.variables[var_name]["immutable"]:
+            self.errors.append(f"Error on line {line}: Cannot assign to immutable variable '{var_name}'.")
             return
 
-        # Дальше идет код для обработки присвоения значения переменной
-        expr_type = self.evaluate_expression()  # Подсчет типа выражения
-        if self.variables[lexeme]["immutable"]:
-            self.errors.append(f"Error on line {line}: Cannot assign to immutable variable '{lexeme}'.")
-        elif self.variables[lexeme]["type"] != expr_type:
-            self.errors.append(f"Error on line {line}: Type mismatch in assignment to '{lexeme}'.")
+        expr_type = self.evaluate_expression()
 
-        self.variables[lexeme]["initialized"] = True  # Помечаем как инициализированную
+        if self.variables[var_name]["type"] != expr_type:
+            self.errors.append(f"Error on line {line}: Type mismatch in assignment to '{var_name}'.")
+
+        self.variables[var_name]["initialized"] = True
 
     def handle_operation(self, line, operator):
         left_operand_type = self.get_operand_type()
@@ -87,7 +85,7 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
 
     def get_next_token(self, expected=None):
-        """Retrieve the next token based on expected type."""
+        """Возвращает следующую лексему в зависимости от ожидаемого типа."""
         self.current_index += 1
         if self.current_index < len(self.symbols_table):
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
@@ -97,7 +95,7 @@ class Semantic:
         return None
 
     def get_previous_token(self, expected=None):
-        """Retrieve the previous token based on expected type."""
+        """Возвращает предыдущую лексему в зависимости от ожидаемого типа."""
         if self.current_index > 0:
             self.current_index -= 1
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
@@ -124,14 +122,14 @@ class Semantic:
         return expr_type or "unknown"
 
     def get_operand_type(self):
-        """Retrieve operand type for binary operation."""
+        """Возвращает тип операнда для бинарной операции."""
         operand = self.get_next_token()
         if operand in self.variables:
             return self.variables[operand]["type"]
         return "unknown"
 
     def get_operand_value(self):
-        """Retrieve operand value, primarily for division check."""
+        """Возвращает значение операнда, в основном для проверки деления на ноль."""
         operand = self.get_next_token()
         if operand.isdigit():
             return int(operand)
@@ -139,6 +137,6 @@ class Semantic:
             return self.variables[operand].get("value", None)
         return None
 
-
+# Пример вызова анализатора с таблицей символов
 analyzer = Semantic(list(tableOfSymb.values()))
 analyzer.analyze()
