@@ -1,7 +1,5 @@
 from Lexer import tableOfSymb
 
-from Lexer import tableOfSymb
-
 class Semantic:
     def __init__(self, symbols_table):
         self.symbols_table = symbols_table
@@ -140,6 +138,5 @@ class Semantic:
             return self.variables[operand].get("value", None)
         return None
 
-# Example usage
 analyzer = Semantic(list(tableOfSymb.values()))
 analyzer.analyze()
