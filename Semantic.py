@@ -13,6 +13,8 @@ class Semantic:
             self.current_index = self.symbols_table.index(entry)
 
             if token_type == "id":
+                if lexeme in ["true", "false"]:
+                    continue
                 if lexeme not in self.variables:
                     self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before declaration.")
                 elif not self.variables[lexeme]["initialized"]:
@@ -118,19 +120,47 @@ class Semantic:
     def evaluate_expression(self):
         expr_type = None
         expr_start = self.current_index
+        found_operator = False
+
         while self.current_index < len(self.symbols_table):
             _, lexeme, token_type, additional = self.symbols_table[self.current_index]
 
-            if token_type == "comp_op":
-                expr_type = "boolean"
+            if lexeme == "false" or lexeme == "true":
+                expr_type = "Boolean"
                 break
 
-            if token_type == "type":
-                expr_type = lexeme
+            if token_type == "comp_op":
+                expr_type = "Boolean"
+                break
+
+            if token_type == "int":
+                if expr_type is None or expr_type == "Int":
+                    expr_type = "Int"
+                else:
+                    expr_type = "Mismatched Types"
+            elif token_type == "float":
+                if expr_type is None or expr_type in ["Int", "Float"]:
+                    expr_type = "Float"
+                else:
+                    expr_type = "Mismatched Types"
+            elif token_type == "string":
+                if expr_type is None:
+                    expr_type = "String"
+                else:
+                    expr_type = "Mismatched Types"
+            elif token_type == "id" and lexeme in self.variables:
+                if expr_type is None:
+                    expr_type = self.variables[lexeme]["type"]
+                elif expr_type != self.variables[lexeme]["type"]:
+                    expr_type = "Mismatched Types"
+
+            if token_type in ["add_op", "mult_op", "divide_op"]:
+                found_operator = True
 
             self.current_index += 1
+
         self.current_index = expr_start
-        return expr_type or "unknown"
+        return expr_type if found_operator or expr_type else "unknown"
 
     def get_operand_type(self):
         operand = self.get_next_token("id")
