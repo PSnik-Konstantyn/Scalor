@@ -61,28 +61,37 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Variable '{var_name}' used before declaration.")
             return
 
-        # Проверка на неизменяемость переменной 'val'
+        # Перевірка на незмінність змінної 'val'
         if self.variables[var_name]["immutable"]:
             self.errors.append(f"Error on line {line}: Cannot assign to immutable variable '{var_name}'.")
             return
 
         expr_type = self.evaluate_expression()
 
+        # Перевірка на відповідність типів
         if self.variables[var_name]["type"] != expr_type:
-            self.errors.append(f"Error on line {line}: Type mismatch in assignment to '{var_name}'.")
+            self.errors.append(
+                f"Error on line {line}: Type mismatch in assignment to '{var_name}'. Expected {self.variables[var_name]['type']}, but got {expr_type}.")
 
+        # Оновлення стану змінної
         self.variables[var_name]["initialized"] = True
 
     def handle_operation(self, line, operator):
         left_operand_type = self.get_operand_type()
         right_operand_type = self.get_operand_type()
 
-        if operator in ["+", "-", "*", "/"]:
-            if left_operand_type != right_operand_type:
-                self.errors.append(f"Error on line {line}: Type mismatch in operation '{operator}'.")
-
-        if operator == "/" and right_operand_type == "int" and self.get_operand_value() == 0:
+        # Перевірка на типи для бінарних операцій
+        if left_operand_type != right_operand_type:
+            self.errors.append(
+                f"Error on line {line}: Type mismatch in operation '{operator}' between {left_operand_type} and {right_operand_type}.")
+        elif operator == "/" and right_operand_type == "int" and self.get_operand_value() == 0:
+            # Перевірка ділення на нуль
             self.errors.append(f"Error on line {line}: Division by zero.")
+
+        # Додавання `string` і іншого типу конвертує в `string`
+        if operator == "+" and ("string" in [left_operand_type, right_operand_type]):
+            return "string"
+        return left_operand_type
 
     def handle_control_structure(self, line, structure_type):
         condition_type = self.evaluate_expression()
