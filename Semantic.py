@@ -22,7 +22,7 @@ class Semantic:
                     self.handle_declaration(line, lexeme)
                 elif lexeme in ["if", "while"]:
                     self.handle_control_structure(line, lexeme)
-            elif token_type == "assign_op" and lexeme == ':=':
+            elif token_type == "assign_op" and lexeme == '=':
                 self.handle_assignment(line)
             elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
                 self.handle_operation(line, lexeme)
@@ -57,38 +57,37 @@ class Semantic:
     def handle_assignment(self, line):
         var_name = self.get_previous_token("id")
 
+        # Проверка на случай, если var_name равно None
+        if var_name is None or var_name == "undefined_token":
+        #    self.errors.append(f"Error on line {line}: Expected variable name before assignment.")
+            return
+
         if var_name not in self.variables:
             self.errors.append(f"Error on line {line}: Variable '{var_name}' used before declaration.")
             return
 
-        # Перевірка на незмінність змінної 'val'
         if self.variables[var_name]["immutable"]:
             self.errors.append(f"Error on line {line}: Cannot assign to immutable variable '{var_name}'.")
             return
 
         expr_type = self.evaluate_expression()
 
-        # Перевірка на відповідність типів
         if self.variables[var_name]["type"] != expr_type:
             self.errors.append(
                 f"Error on line {line}: Type mismatch in assignment to '{var_name}'. Expected {self.variables[var_name]['type']}, but got {expr_type}.")
 
-        # Оновлення стану змінної
         self.variables[var_name]["initialized"] = True
 
     def handle_operation(self, line, operator):
         left_operand_type = self.get_operand_type()
         right_operand_type = self.get_operand_type()
 
-        # Перевірка на типи для бінарних операцій
         if left_operand_type != right_operand_type:
             self.errors.append(
                 f"Error on line {line}: Type mismatch in operation '{operator}' between {left_operand_type} and {right_operand_type}.")
         elif operator == "/" and right_operand_type == "int" and self.get_operand_value() == 0:
-            # Перевірка ділення на нуль
             self.errors.append(f"Error on line {line}: Division by zero.")
 
-        # Додавання `string` і іншого типу конвертує в `string`
         if operator == "+" and ("string" in [left_operand_type, right_operand_type]):
             return "string"
         return left_operand_type
@@ -103,18 +102,18 @@ class Semantic:
         if self.current_index < len(self.symbols_table):
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
             if expected and token_type != expected:
-                self.errors.append(f"Error on line {line}: Expected {expected} but found {token_type}.")
-            return lexeme
-        return None
+                return "undefined_token"
+            return lexeme if token_type == expected else "undefined_token"
+        return "undefined_token"
 
     def get_previous_token(self, expected=None):
         if self.current_index > 0:
             self.current_index -= 1
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
             if expected and token_type != expected:
-                self.errors.append(f"Error on line {line}: Expected {expected} but found {token_type}.")
-            return lexeme
-        return None
+                return "undefined_token"
+            return lexeme if token_type == expected else "undefined_token"
+        return "undefined_token"
 
     def evaluate_expression(self):
         expr_type = None
@@ -134,14 +133,14 @@ class Semantic:
         return expr_type or "unknown"
 
     def get_operand_type(self):
-        operand = self.get_next_token()
+        operand = self.get_next_token("id")
         if operand in self.variables:
             return self.variables[operand]["type"]
         return "unknown"
 
     def get_operand_value(self):
-        operand = self.get_next_token()
-        if operand.isdigit():
+        operand = self.get_next_token("int")
+        if operand and operand.isdigit():
             return int(operand)
         elif operand in self.variables:
             return self.variables[operand].get("value", None)
