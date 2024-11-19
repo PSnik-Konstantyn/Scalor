@@ -52,16 +52,17 @@ class Semantic:
             else:
                 self.errors.append(f"Error on line {line}: Variable '{var_name}' redeclared.")
         else:
-            self.variables[var_name] = {
-                "type": var_type,
-                "initialized": decl_type == "val" or decl_type == "var",
-                "immutable": decl_type == "val"
-            }
             expr_type = self.evaluate_expression()
             if expr_type != var_type:
                 self.errors.append(
                     f"Error on line {line}: Type mismatch in initialization of '{var_name}'. Expected {var_type}, but got {expr_type}.")
                 return
+            self.variables[var_name] = {
+                "type": var_type,
+                "initialized": decl_type == "val" or decl_type == "var",
+                "immutable": decl_type == "val"
+            }
+
 
     def handle_assignment(self, line):
         var_name = self.get_previous_token("id")
@@ -146,8 +147,9 @@ class Semantic:
             return "Mismatched Types"
 
         if operator == "/":
-            if right_operand_type == "Int" and self.get_operand_value() == 0:
+            if self.get_operand_value() == 0:
                 self.errors.append(f"Error on line {line}: Division by zero.")
+                print(f"Division by zero on line {line}.")
             if left_operand_type == "Int":
                 return "Int"
             elif left_operand_type == "Float":
@@ -217,7 +219,8 @@ class Semantic:
         return expr_type if found_operator or expr_type else "unknown"
 
     def get_operand_value(self):
-        operand = self.get_next_token("int")
+        _, operand, _, _ = self.symbols_table[self.current_index-1]
+        # -1
         if operand and operand.isdigit():
             return int(operand)
         elif operand in self.variables:
