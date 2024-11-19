@@ -1,11 +1,12 @@
 from Lexer import tableOfSymb
 
+
 class Semantic:
     def __init__(self, symbols_table):
         self.symbols_table = symbols_table
         self.variables = {}
         self.errors = []
-        self.current_index = 1
+        self.current_index = -1
 
     def analyze(self):
         for entry in self.symbols_table:
@@ -80,21 +81,6 @@ class Semantic:
 
         self.variables[var_name]["initialized"] = True
 
-    def handle_operation(self, line, operator):
-        left_operand_type = self.get_operand_type()
-        right_operand_type = self.get_operand_type()
-
-        if left_operand_type != right_operand_type:
-            self.errors.append(
-                f"Error on line {line}: Type mismatch in operation '{operator}' between {left_operand_type} and {right_operand_type}."
-            )
-        elif operator == "/" and right_operand_type == "Int" and self.get_operand_value() == 0:
-            self.errors.append(f"Error on line {line}: Division by zero.")
-
-        if operator == "+" and ("String" in [left_operand_type, right_operand_type]):
-            return "String"
-        return left_operand_type
-
     def handle_control_structure(self, line, structure_type):
         condition_type = self.evaluate_expression()
         if condition_type != "Boolean":
@@ -119,21 +105,63 @@ class Semantic:
         return "undefined_token"
 
     def get_operand_type(self):
+        """
+        Определяет тип текущего операнда, например, переменной или литерала.
+        """
         operand = self.get_next_token()
+
+        # Проверка на литералы
         if operand.isdigit():
             return "Int"
-        elif operand in self.variables:
-            return self.variables[operand]["type"]
         elif self.is_float_literal(operand):
             return "Float"
+        elif operand.startswith('"') and operand.endswith('"'):
+            return "String"
+
+        # Проверка на существующую переменную
+        if operand in self.variables:
+            return self.variables[operand]["type"]
+
+        # Проверка на булевые значения
+        if operand in ["true", "false"]:
+            return "Boolean"
+
         return "unknown"
 
     def is_float_literal(self, operand):
+        """
+        Проверяет, является ли строка допустимым вещественным числом.
+        """
         try:
             float(operand)
             return True
         except ValueError:
             return False
+
+    def handle_operation(self, line, operator):
+        left_operand_type = self.get_operand_type()
+        right_operand_type = self.get_operand_type()
+
+        if left_operand_type != right_operand_type and operator not in ["+"]:
+            self.errors.append(
+                f"Error on line {line}: Type mismatch in operation '{operator}' between {left_operand_type} and {right_operand_type}."
+            )
+            return "Mismatched Types"
+
+        if operator == "/":
+            if right_operand_type == "Int" and self.get_operand_value() == 0:
+                self.errors.append(f"Error on line {line}: Division by zero.")
+            if left_operand_type == "Int":
+                return "Int"  # Целочисленное деление
+            elif left_operand_type == "Float":
+                return "Float"  # Обычное деление для Float
+
+        if operator == "+":
+            if "String" in [left_operand_type, right_operand_type]:
+                return "String"
+            return left_operand_type
+
+        return left_operand_type
 
     def evaluate_expression(self):
         expr_type = None
@@ -143,35 +171,47 @@ class Semantic:
         while self.current_index < len(self.symbols_table):
             _, lexeme, token_type, _ = self.symbols_table[self.current_index]
 
+            # Обработка булевых значений
             if lexeme in ["false", "true"]:
                 expr_type = "Boolean"
                 break
 
+            # Операторы сравнения
             if token_type == "comp_op" or lexeme in ["<=", ">=", "!=", "=="]:
+                found_operator = True
                 expr_type = "Boolean"
                 break
 
+            # Обработка типов Int и Float
             if token_type == "int" or lexeme.isdigit():
-                if expr_type is None or expr_type == "int":
+                if expr_type is None or expr_type == "Int":
                     expr_type = "Int"
-                else:
-                    expr_type = "Mismatched Types"
-            elif token_type == "float" or self.is_float_literal(lexeme):
-                if expr_type is None or expr_type in ["int", "float"]:
+                elif expr_type == "Float":
                     expr_type = "Float"
                 else:
                     expr_type = "Mismatched Types"
+            elif token_type == "float" or self.is_float_literal(lexeme):
+                if expr_type is None or expr_type in ["Int", "Float"]:
+                    expr_type = "Float"
+                else:
+                    expr_type = "Mismatched Types"
+
+            # Обработка строк
             elif token_type == "string":
                 if expr_type is None:
                     expr_type = "String"
                 else:
-                    expr_type = "Mismatched Types"
+                    expr_type = "String"  # Преобразование в String при операции '+'
+
+            # Проверка переменных
             elif token_type == "id" and lexeme in self.variables:
+                var_type = self.variables[lexeme]["type"]
                 if expr_type is None:
-                    expr_type = self.variables[lexeme]["type"]
-                elif expr_type != self.variables[lexeme]["type"]:
+                    expr_type = var_type
+                elif expr_type != var_type:
                     expr_type = "Mismatched Types"
 
+            # Обработка операторов
             if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
 

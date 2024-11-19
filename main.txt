@@ -1,8 +1,9 @@
 var x : Int = 10
 val y2 : Float = 5.5
-x = 1
+x = 1 + 2
 print(x)
-var isActive : Boolean = 5 == 4
+var isActive : Boolean = x >= y2
 var message : String = "Hello Scalor"
 
-message = "Hello World"
+
+var message2 : String = "Hello World" + x
