@@ -11,10 +11,13 @@ class Parser:
         try:
             while self.pos < len(self.tokens):
                 self.statement()
+            print("Syntax analysis completed successfully.")
+            return True
         except SyntaxError as e:
             print(f"Syntax Error at token {self.pos}: {e}")
         except Exception as e:
             print(f"Unexpected Error: {e}")
+        return False
 
     def statement(self):
         if self.lookahead('keyword', 'val') or self.lookahead('keyword', 'var'):

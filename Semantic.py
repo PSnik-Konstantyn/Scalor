@@ -1,4 +1,5 @@
 from Lexer import tableOfSymb
+from Parser import Parser
 
 
 class Semantic:
@@ -171,7 +172,7 @@ class Semantic:
             if line_number != current_line:
                 break
 
-            print(f'{line_number} _____ {lexeme}')
+          #  print(f'{line_number} _____ {lexeme}')
 
             if lexeme in ["false", "true"]:
                 expr_type = "Boolean"
@@ -223,5 +224,13 @@ class Semantic:
             return self.variables[operand].get("value", None)
         return None
 
-analyzer = Semantic(list(tableOfSymb.values()))
-analyzer.analyze()
+
+parser = Parser(tableOfSymb)
+result = parser.parse()
+
+if result:
+    print('\n\n\n')
+    analyzer = Semantic(list(tableOfSymb.values()))
+    analyzer.analyze()
+else:
+    print("Semantic analysis aborted due to syntax errors.")
