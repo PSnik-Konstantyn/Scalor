@@ -56,6 +56,11 @@ class Semantic:
                 "initialized": decl_type == "val" or decl_type == "var",
                 "immutable": decl_type == "val"
             }
+            expr_type = self.evaluate_expression()
+            if expr_type != var_type:
+                self.errors.append(
+                    f"Error on line {line}: Type mismatch in initialization of '{var_name}'. Expected {var_type}, but got {expr_type}.")
+                return
 
     def handle_assignment(self, line):
         var_name = self.get_previous_token("id")
@@ -105,12 +110,8 @@ class Semantic:
         return "undefined_token"
 
     def get_operand_type(self):
-        """
-        Определяет тип текущего операнда, например, переменной или литерала.
-        """
         operand = self.get_next_token()
 
-        # Проверка на литералы
         if operand.isdigit():
             return "Int"
         elif self.is_float_literal(operand):
@@ -118,20 +119,15 @@ class Semantic:
         elif operand.startswith('"') and operand.endswith('"'):
             return "String"
 
-        # Проверка на существующую переменную
         if operand in self.variables:
             return self.variables[operand]["type"]
 
-        # Проверка на булевые значения
         if operand in ["true", "false"]:
             return "Boolean"
 
         return "unknown"
 
     def is_float_literal(self, operand):
-        """
-        Проверяет, является ли строка допустимым вещественным числом.
-        """
         try:
             float(operand)
             return True
@@ -152,9 +148,9 @@ class Semantic:
             if right_operand_type == "Int" and self.get_operand_value() == 0:
                 self.errors.append(f"Error on line {line}: Division by zero.")
             if left_operand_type == "Int":
-                return "Int"  # Целочисленное деление
+                return "Int"
             elif left_operand_type == "Float":
-                return "Float"  # Обычное деление для Float
+                return "Float"
 
         if operator == "+":
             if "String" in [left_operand_type, right_operand_type]:
@@ -165,24 +161,27 @@ class Semantic:
 
     def evaluate_expression(self):
         expr_type = None
-        expr_start = self.current_index
         found_operator = False
 
-        while self.current_index < len(self.symbols_table):
-            _, lexeme, token_type, _ = self.symbols_table[self.current_index]
+        current_line, _, _, _ = self.symbols_table[self.current_index]
 
-            # Обработка булевых значений
+        while self.current_index < len(self.symbols_table):
+            line_number, lexeme, token_type, _  = self.symbols_table[self.current_index]
+
+            if line_number != current_line:
+                break
+
+            print(f'{line_number} _____ {lexeme}')
+
             if lexeme in ["false", "true"]:
                 expr_type = "Boolean"
                 break
 
-            # Операторы сравнения
             if token_type == "comp_op" or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
                 expr_type = "Boolean"
                 break
 
-            # Обработка типов Int и Float
             if token_type == "int" or lexeme.isdigit():
                 if expr_type is None or expr_type == "Int":
                     expr_type = "Int"
@@ -196,14 +195,12 @@ class Semantic:
                 else:
                     expr_type = "Mismatched Types"
 
-            # Обработка строк
             elif token_type == "string":
                 if expr_type is None:
                     expr_type = "String"
                 else:
-                    expr_type = "String"  # Преобразование в String при операции '+'
+                    expr_type = "String"
 
-            # Проверка переменных
             elif token_type == "id" and lexeme in self.variables:
                 var_type = self.variables[lexeme]["type"]
                 if expr_type is None:
@@ -211,13 +208,11 @@ class Semantic:
                 elif expr_type != var_type:
                     expr_type = "Mismatched Types"
 
-            # Обработка операторов
             if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
 
             self.current_index += 1
 
-        self.current_index = expr_start
         return expr_type if found_operator or expr_type else "unknown"
 
     def get_operand_value(self):
