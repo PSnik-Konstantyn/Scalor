@@ -1,4 +1,4 @@
-var x : Int = 10 + x
+var x : Int = 10
 val y2 : Float = 5.5
 var isActive : Boolean = 5 <= 4
 val message : String = "Hello Scalor"
@@ -21,7 +21,7 @@ if (isActive == true) {
        if ( 0 <= x - 2 ) {
            print("x is greater")
        } else {
-
+           print("nothing is greater")
        }
    }
 }
