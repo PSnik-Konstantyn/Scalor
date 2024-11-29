@@ -1,11 +1,13 @@
 var x : Int = 10
 val y2 : Float = 5.5
-var isActive : Boolean = 5 <= 4
+var isActive : Boolean = 5 != 4
 val message : String = "Hello Scalor"
 
-// comment example val y3 : Float = 5.5 перевірка
+input(x)
 
-while (x >= 0) {
+// comment example val y3 : Float = 5.5 add input check
+
+while (x >= 0.1) {
    print(x)
    x = x - 12
 }

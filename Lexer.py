@@ -5,7 +5,7 @@ tokenTable = {
     '.': 'dot', '\t': 'ws', ' ': 'ws', '\n': 'end', '=': 'assign_op', ':': 'type_op',
     'val': 'keyword', 'var': 'keyword', 'Int': 'type', 'Float': 'type',
     'Boolean': 'type', 'String': 'type', '>': 'comp_op', '<': 'comp_op',
-    'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword', 'StringLiteral': 'string', 'true': 'keyword', '//': 'comment'
+    'while': 'keyword', 'if': 'keyword', 'else': 'keyword', 'print': 'keyword','input': 'keyword', 'StringLiteral': 'string', 'true': 'keyword', '//': 'comment'
 }
 
 tokStateTable = {
