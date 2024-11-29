@@ -232,7 +232,7 @@ parser = Parser(tableOfSymb)
 result = parser.parse()
 
 if result:
-    print('\n\n\n')
+    print('\n---------------------\n')
     analyzer = Semantic(list(tableOfSymb.values()))
     analyzer.analyze()
 else:
