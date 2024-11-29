@@ -26,6 +26,8 @@ class Semantic:
                     self.handle_declaration(line, lexeme)
                 elif lexeme in ["if", "while"]:
                     self.handle_control_structure(line, lexeme)
+                elif lexeme == "input":
+                    self.handle_input(line)
             elif token_type == "assign_op" and lexeme == '=':
                 self.handle_assignment(line)
             elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
@@ -36,6 +38,23 @@ class Semantic:
                 print(error)
         else:
             print("Semantic analysis completed successfully.")
+
+    def handle_input(self, line):
+        self.get_next_token("type_op")
+        var_name = self.get_next_token("id")
+
+        if var_name is None:
+            self.errors.append(f"Error on line {line}: Expected variable name after 'input'.")
+            return
+
+        if var_name not in self.variables:
+            self.errors.append(f"Error on line {line}: Variable '{var_name}' used in 'input' before declaration.")
+            return
+
+        if self.variables[var_name]["immutable"]:
+            self.errors.append(f"Error on line {line}: Cannot use immutable variable '{var_name}' in 'input'.")
+
+        self.get_next_token("type_op")
 
     def handle_declaration(self, line, decl_type):
         var_name = self.get_next_token("id")

@@ -28,6 +28,8 @@ class Parser:
             self.while_statement()
         elif self.lookahead('keyword', 'print'):
             self.print_statement()
+        elif self.lookahead('keyword', 'input'):
+            self.input_statement()
         elif self.lookahead('id'):
             self.assignment_statement()
         else:
@@ -204,6 +206,16 @@ class Parser:
             self.print_with_indent(f"Print statement recognized with argument: {expr}")
         except SyntaxError as e:
             raise SyntaxError(f"Error in print statement: {e}")
+
+    def input_statement(self):
+        try:
+            self.consume('keyword', 'input')
+            self.consume('par_op', '(')
+            expr = self.expression()
+            self.consume('par_op', ')')
+            self.print_with_indent(f"Input statement recognized with argument: {expr}")
+        except SyntaxError as e:
+            raise SyntaxError(f"Error in input statement: {e}")
 
     def consume(self, token_type, lexeme=None):
         if self.lookahead_double_op():
