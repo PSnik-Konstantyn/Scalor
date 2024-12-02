@@ -99,9 +99,10 @@ class Parser:
             raise SyntaxError(f"Error in factor: {e}")
 
     def primary(self):
-        if self.lookahead('add_op', '-') and self.lookahead_next_is_numeric():
+        if self.lookahead('add_op', '-') and (
+                self.lookahead_next_is_numeric() or self.lookahead_next_is_parenthesis() or self.lookahead_next_is_identifier()):
             self.consume('add_op', '-')
-            return f"-{self.primary()}"
+            return f'-{self.primary()}'
 
         if self.lookahead('int'):
             return self.consume('int')
@@ -120,6 +121,15 @@ class Parser:
             return expr
         else:
             raise SyntaxError(f"Unexpected token in primary expression: {self.peek()}")
+
+    def lookahead_next_is_parenthesis(self):
+        return (self.pos + 1 < len(self.tokens) and
+                self.tokens[self.pos + 1][2] == 'par_op' and
+                self.tokens[self.pos + 1][1] == '(')
+
+    def lookahead_next_is_identifier(self):
+        return (self.pos + 1 < len(self.tokens) and
+                self.tokens[self.pos + 1][2] == 'id')
 
     def lookahead_next_is_numeric(self):
         return (self.pos + 1 < len(self.tokens) and

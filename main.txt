@@ -28,5 +28,5 @@ if (isActive == true) {
    }
 }
 
-val w : Float = (10 * (2 + 1) / (5 * 2) ^ 2) - 1.1
+val w : Float = (10 * -(-2 + 1)) + 1.2^2^3 + x
 print(w)
