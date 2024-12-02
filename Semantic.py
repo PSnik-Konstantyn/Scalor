@@ -159,6 +159,12 @@ class Semantic:
         left_operand_type = self.get_operand_type()
         right_operand_type = self.get_operand_type()
 
+        # Перевірка на типи Int і Float
+        if (left_operand_type == "Int" and right_operand_type == "Float") or \
+                (left_operand_type == "Float" and right_operand_type == "Int"):
+            return "Float"  # Результат операції Int + Float або Float + Int - це Float
+
+        # Перевірка на невідповідність типів, якщо вони не включають приведення Int + Float
         if left_operand_type != right_operand_type and operator not in ["+"]:
             self.errors.append(
                 f"Error on line {line}: Type mismatch in operation '{operator}' between {left_operand_type} and {right_operand_type}."
@@ -168,7 +174,6 @@ class Semantic:
         if operator == "/":
             if self.get_operand_value() == 0:
                 self.errors.append(f"Error on line {line}: Division by zero.")
-                print(f"Division by zero on line {line}.")
             if left_operand_type == "Int":
                 return "Int"
             elif left_operand_type == "Float":
@@ -228,7 +233,10 @@ class Semantic:
                 if expr_type is None:
                     expr_type = var_type
                 elif expr_type != var_type:
-                    expr_type = "Mismatched Types"
+                    if expr_type == "Float" and var_type == "Int":
+                        expr_type = "Float"
+                    else :
+                        expr_type = "Mismatched Types"
 
             if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True

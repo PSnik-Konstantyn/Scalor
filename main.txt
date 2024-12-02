@@ -28,5 +28,6 @@ if (isActive == true) {
    }
 }
 
-val w : Float = (10 * -(-2 + 1)) + 1.2^2^3 + x
+var w : Float = -2.3
+w = y2 + x
 print(w)
