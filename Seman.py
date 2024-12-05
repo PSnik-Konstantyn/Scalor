@@ -8,7 +8,7 @@ class Semantic:
         self.symbols_table = symbols_table
         self.variables = {}
         self.errors = []
-        self.current_index = 0
+        self.current_index = -1
         self.generator = PostfixGenerator()
 
     def analyze(self):
@@ -58,9 +58,7 @@ class Semantic:
         if self.variables[var_name]["immutable"]:
             self.errors.append(f"Error on line {line}: Cannot use immutable variable '{var_name}' in 'input'.")
 
-        self.generator.emit("input", var_name)
         self.get_next_token("par_op")
-
 
     def handle_print(self, line):
         self.get_next_token("par_op")
@@ -83,7 +81,6 @@ class Semantic:
 
         self.get_next_token("par_op")
 
-
     def handle_declaration(self, line, decl_type):
         var_name = self.get_next_token("id")
         self.get_next_token("type_op")
@@ -93,13 +90,9 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Incomplete declaration.")
             return
 
-        if var_name and var_type:
-            self.generator.add_variable(var_name, var_type)
-
         if var_name in self.variables:
             if self.variables[var_name]["immutable"]:
-                self.errors.append(
-                    f"Error on line {line}: Variable '{var_name}' is immutable and cannot be redeclared.")
+                self.errors.append(f"Error on line {line}: Variable '{var_name}' is immutable and cannot be redeclared.")
             else:
                 self.errors.append(f"Error on line {line}: Variable '{var_name}' redeclared.")
         else:
@@ -114,15 +107,12 @@ class Semantic:
                 "immutable": decl_type == "val"
             }
 
+
     def handle_assignment(self, line):
         var_name = self.get_previous_token("id")
 
         if var_name is None or var_name == "undefined_token":
             return
-
-        if var_name in self.variables:
-            self.generator.emit("l-val", var_name)
-            self.generator.emit("=", None)
 
         if var_name not in self.variables:
             self.errors.append(f"Error on line {line}: Variable '{var_name}' used before declaration.")
@@ -144,20 +134,58 @@ class Semantic:
 
     def handle_control_structure(self, line, structure_type):
         condition_type = self.evaluate_expression()
-        if structure_type == "if":
-            label_false = self.generator.generate_label()
-            self.generator.emit("JF", label_false)
-            self.generator.emit("label", label_false)
         if condition_type != "Boolean":
             self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
+
+    def get_next_token(self, expected=None):
+        self.current_index += 1
+        if self.current_index < len(self.symbols_table):
+            line, lexeme, token_type, _ = self.symbols_table[self.current_index]
+            if expected is None:
+                return lexeme
+            if expected and token_type != expected:
+                return "undefined_token"
+            return lexeme if token_type == expected else "undefined_token"
+        return "undefined_token"
+
+    def get_previous_token(self, expected=None):
+        if self.current_index > 0:
+            self.current_index -= 1
+            line, lexeme, token_type, _ = self.symbols_table[self.current_index]
+            if expected and token_type != expected:
+                return "undefined_token"
+            return lexeme if token_type == expected else "undefined_token"
+        return "undefined_token"
+
+    def get_operand_type(self):
+        self.current_index -= 1
+        operand = self.get_next_token()
+
+        if operand.isdigit():
+            return "Int"
+        elif self.is_float_literal(operand):
+            return "Float"
+        elif operand.startswith('"') and operand.endswith('"'):
+            return "String"
+
+        if operand in self.variables:
+            return self.variables[operand]["type"]
+
+        if operand in ["true", "false"]:
+            return "Boolean"
+
+        return "unknown"
+
+    def is_float_literal(self, operand):
+        try:
+            float(operand)
+            return True
+        except ValueError:
+            return False
 
     def handle_operation(self, line, operator):
         left_operand_type = self.get_operand_type()
         right_operand_type = self.get_operand_type()
-
-        if left_operand_type == "unknown" or right_operand_type == "unknown":
-            self.errors.append(f"Error on line {line}: Unknown operand type in operation '{operator}'.")
-            return "Mismatched Types"
 
         # Перевірка на типи Int і Float
         if (left_operand_type == "Int" and right_operand_type == "Float") or \
@@ -193,10 +221,12 @@ class Semantic:
         current_line, _, _, _ = self.symbols_table[self.current_index]
 
         while self.current_index < len(self.symbols_table):
-            line_number, lexeme, token_type, _ = self.symbols_table[self.current_index]
+            line_number, lexeme, token_type, _  = self.symbols_table[self.current_index]
 
             if line_number != current_line:
                 break
+
+          #  print(f'{line_number} _____ {lexeme}')
 
             if lexeme in ["false", "true"]:
                 expr_type = "Boolean"
@@ -233,7 +263,7 @@ class Semantic:
                 elif expr_type != var_type:
                     if expr_type == "Float" and var_type == "Int":
                         expr_type = "Float"
-                    else:
+                    else :
                         expr_type = "Mismatched Types"
 
             if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["<=", ">=", "!=", "=="]:
@@ -243,68 +273,14 @@ class Semantic:
 
         return expr_type if found_operator or expr_type else "unknown"
 
-    def get_next_token(self, expected=None):
-        self.current_index += 1
-        if self.current_index < len(self.symbols_table):
-            line, lexeme, token_type, _ = self.symbols_table[self.current_index]
-            if expected is None:
-                return lexeme
-            if expected and token_type != expected:
-                return "undefined_token"
-            return lexeme if token_type == expected else "undefined_token"
-        return "undefined_token"
-
-    def get_previous_token(self, expected=None):
-        if self.current_index > 0:
-            self.current_index -= 1
-            line, lexeme, token_type, _ = self.symbols_table[self.current_index]
-            if expected and token_type != expected:
-                return "undefined_token"
-            return lexeme if token_type == expected else "undefined_token"
-        return "undefined_token"
-
-    def get_operand_type(self):
-        operand = self.get_next_token()
-
-        if operand is None:
-            return "None"
-        if operand.isdigit():
-            return "Int"
-        elif self.is_float_literal(operand):
-            return "Float"
-        elif operand.startswith('"') and operand.endswith('"'):
-            return "String"
-
-        if operand in self.variables:
-            return self.variables[operand]["type"]
-
-        if operand in ["true", "false"]:
-            return "Boolean"
-
-        print('---------------')
-        print(operand, self.current_index)
-        print('---------------')
-
-        return "unknown"
-
-    def is_float_literal(self, operand):
-        try:
-            float(operand)
-            return True
-        except ValueError:
-            return False
-
     def get_operand_value(self):
         _, operand, _, _ = self.symbols_table[self.current_index-1]
+        # -1
         if operand and operand.isdigit():
             return int(operand)
-        if operand.startswith('"') and operand.endswith('"'):
-            return operand[1:-1]
-
-        if operand in self.variables:
-            return self.variables[operand]["value"]
-        return "undefined_value"
-
+        elif operand in self.variables:
+            return self.variables[operand].get("value", None)
+        return None
 
 parser = Parser(tableOfSymb)
 result = parser.parse()

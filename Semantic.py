@@ -40,7 +40,7 @@ class Semantic:
             print("Semantic analysis completed successfully.")
 
     def handle_input(self, line):
-        self.get_next_token("type_op")
+        self.get_next_token("par_op")
         var_name = self.get_next_token("id")
 
         if var_name is None:
@@ -54,7 +54,7 @@ class Semantic:
         if self.variables[var_name]["immutable"]:
             self.errors.append(f"Error on line {line}: Cannot use immutable variable '{var_name}' in 'input'.")
 
-        self.get_next_token("type_op")
+        self.get_next_token("par_op")
 
     def handle_declaration(self, line, decl_type):
         var_name = self.get_next_token("id")
