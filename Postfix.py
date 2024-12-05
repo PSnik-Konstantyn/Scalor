@@ -7,10 +7,10 @@ class PostfixGenerator:
         self.labelCounter = 0
 
     def generate_label(self):
-        label = f"L{self.labelCounter}"
+        label = f"m{self.labelCounter}"
         while label in self.tableOfLabel:
             self.labelCounter += 1
-            label = f"L{self.labelCounter}"
+            label = f"m{self.labelCounter}"
         self.tableOfLabel[label] = len(self.tableOfLabel)
         return label
 

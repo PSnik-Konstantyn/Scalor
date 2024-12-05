@@ -68,13 +68,13 @@ class Semantic:
             self.errors.append(f"Помилка на лінії {line}: Очікувалось ім'я змінної або константа для 'print'.")
             return
 
-        if value.isdigit():  # Обробка цілих чисел
+        if value.isdigit():
             self.generator.emit("print", value)
-        elif self.is_float_literal(value):  # Обробка дробових чисел
+        elif self.is_float_literal(value):
             self.generator.emit("print", value)
-        elif value in ["true", "false"]:  # Обробка булевих значень
+        elif value in ["true", "false"]:
             self.generator.emit("print", value)
-        elif value in self.variables:  # Перевірка змінних
+        elif value in self.variables:
             self.generator.emit("print", value)
         else:
             self.generator.emit("print", value)
@@ -92,21 +92,28 @@ class Semantic:
 
         if var_name in self.variables:
             if self.variables[var_name]["immutable"]:
-                self.errors.append(f"Error on line {line}: Variable '{var_name}' is immutable and cannot be redeclared.")
+                self.errors.append(
+                    f"Error on line {line}: Variable '{var_name}' is immutable and cannot be redeclared.")
             else:
                 self.errors.append(f"Error on line {line}: Variable '{var_name}' redeclared.")
         else:
-            expr_type = self.evaluate_expression()
-            if expr_type != var_type:
+            # Додаємо змінну до таблиці змінних
+            self.variables[var_name] = {
+                "type": var_type,
+                "initialized": True,  # Завжди ініціалізована
+                "immutable": decl_type == "val"
+            }
+            self.generator.tableOfVar[var_name] = (len(self.generator.tableOfVar) + 1, var_type)
+
+            # Генерація коду для ініціалізації
+            expr_type = self.evaluate_expression()  # Обчислення типу виразу для ініціалізації
+            if expr_type != "unknown" and expr_type != var_type:
                 self.errors.append(
                     f"Error on line {line}: Type mismatch in initialization of '{var_name}'. Expected {var_type}, but got {expr_type}.")
                 return
-            self.variables[var_name] = {
-                "type": var_type,
-                "initialized": decl_type == "val" or decl_type == "var",
-                "immutable": decl_type == "val"
-            }
 
+            self.generator.emit(var_name, "l-val")  # Ліва частина присвоєння
+            self.generator.emit("=", "assign_op")  # Операція присвоєння
 
     def handle_assignment(self, line):
         var_name = self.get_previous_token("id")
@@ -147,6 +154,24 @@ class Semantic:
                 return "undefined_token"
             return lexeme if token_type == expected else "undefined_token"
         return "undefined_token"
+
+    def save_postfix_code(self, file_name):
+        fname = file_name + ".postfix"
+        with open(fname, 'w') as f:
+            f.write(".target: Postfix Machine\n.version: 0.2\n")
+            f.write("\n.vars(\n")
+            for var, var_details in self.variables.items():
+                f.write(f"   {var:<6}{var_details['type']:<10}\n")
+            f.write(")\n")
+            f.write("\n.constants(\n")
+            for const, const_type in self.generator.tableOfConst.items():
+                f.write(f"   {const:<6}{const_type:<10}\n")
+            f.write(")\n")
+            f.write("\n.code(\n")
+            for opcode, operand in self.generator.postfixCodeTSM:
+                f.write(f"   {opcode:<6}{operand or ''}\n")
+            f.write(")\n")
+        print(f"Postfix code saved to {fname}")
 
     def get_previous_token(self, expected=None):
         if self.current_index > 0:
@@ -286,37 +311,37 @@ parser = Parser(tableOfSymb)
 result = parser.parse()
 
 
-def save_postfix_code(file_name, generator):
-    fname = file_name + ".postfix"
+def save_postfix_code(file_name, generator, variables):
+    fname = f"{file_name}.postfix"  # Це дозволить передавати правильний тип
     with open(fname, 'w') as f:
         f.write(".target: Postfix Machine\n.version: 0.2\n")
-
         f.write("\n.vars(\n")
-        for var, (id, var_type) in generator.tableOfVar.items():
-            f.write(f"   {var:4}  {var_type:10}\n")
+        for var, var_details in variables.items():  # Використовуємо 'variables' замість 'self.variables'
+            f.write(f"   {var:<6}{var_details['type']:<10}\n")
         f.write(")\n")
-
-        f.write("\n.labels(\n")
-        for lbl, id in generator.tableOfLabel.items():
-            f.write(f"   {lbl:4}{id:4}\n")
-        f.write(")\n")
-
         f.write("\n.constants(\n")
-        for const, (id, const_type) in generator.tableOfConst.items():
-            f.write(f"   {const:4}  {const_type:10}\n")
+        for const, const_type in generator.tableOfConst.items():
+            f.write(f"   {const:<6}{const_type:<10}\n")
         f.write(")\n")
-
         f.write("\n.code(\n")
         for opcode, operand in generator.postfixCodeTSM:
-            f.write(f"   {opcode:<6}{operand or ''}\n")
+            # Ensure operand is not None before formatting
+            if operand is not None:
+                f.write(f"   {opcode:<6}{operand}\n")
+            else:
+                f.write(f"   {opcode:<6}\n")  # Якщо operand = None, вивести лише opcode
+        # Handle case where operand is None
         f.write(")\n")
     print(f"Postfix code saved to {fname}")
+
+
 
 if result:
     print('\n---------------------\n')
     analyzer = Semantic(list(tableOfSymb.values()))
     analyzer.analyze()
-    save_postfix_code("output", analyzer.generator)
+    save_postfix_code("output", analyzer.generator, analyzer.variables)
+
 
 else:
     print("Semantic analysis aborted due to syntax errors.")
