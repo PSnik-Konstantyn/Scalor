@@ -1,0 +1,39 @@
+.target: Postfix Machine
+.version: 0.2
+
+.vars(
+   x     Int       
+   y2    Float     
+   isActiveBoolean   
+   messageString    
+   w     Float     
+)
+
+.constants(
+)
+
+.code(
+   x     l-val
+   =     assign_op
+   y2    l-val
+   =     assign_op
+   isActivel-val
+   =     assign_op
+   messagel-val
+   =     assign_op
+   input x
+   print x
+   x     l-val
+   =     assign_op
+   print message
+   print Not active
+   print y2
+   print Smaller
+   print x is greater
+   print nothing is greater
+   w     l-val
+   =     assign_op
+   w     l-val
+   =     assign_op
+   print w
+)

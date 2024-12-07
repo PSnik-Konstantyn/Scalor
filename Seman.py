@@ -44,10 +44,13 @@ class Semantic:
             print("Semantic analysis completed successfully.")
 
     def handle_input(self, line):
-        self.get_next_token("par_op")
-        var_name = self.get_next_token("id")
+        par_open = self.get_next_token("par_op")
+        if par_open != "(":
+            self.errors.append(f"Error on line {line}: Expected '(' after 'input'.")
+            return
 
-        if var_name is None:
+        var_name = self.get_next_token("id")
+        if var_name is None or var_name == "undefined_token":
             self.errors.append(f"Error on line {line}: Expected variable name after 'input'.")
             return
 
@@ -57,8 +60,14 @@ class Semantic:
 
         if self.variables[var_name]["immutable"]:
             self.errors.append(f"Error on line {line}: Cannot use immutable variable '{var_name}' in 'input'.")
+            return
 
-        self.get_next_token("par_op")
+        par_close = self.get_next_token("par_op")
+        if par_close != ")":
+            self.errors.append(f"Error on line {line}: Expected ')' after variable name in 'input'.")
+            return
+
+        self.generator.emit("input", var_name)
 
     def handle_print(self, line):
         self.get_next_token("par_op")
@@ -139,6 +148,9 @@ class Semantic:
 
         self.variables[var_name]["initialized"] = True
 
+        self.generator.emit(var_name, "l-val")
+        self.generator.emit("=", "assign_op")
+
     def handle_control_structure(self, line, structure_type):
         condition_type = self.evaluate_expression()
         if condition_type != "Boolean":
@@ -212,30 +224,23 @@ class Semantic:
         left_operand_type = self.get_operand_type()
         right_operand_type = self.get_operand_type()
 
-        # Перевірка на типи Int і Float
-        if (left_operand_type == "Int" and right_operand_type == "Float") or \
-                (left_operand_type == "Float" and right_operand_type == "Int"):
-            return "Float"  # Результат операції Int + Float або Float + Int - це Float
+        if left_operand_type == "Boolean" and right_operand_type == "Boolean" and operator in ["==", "!=", "&&", "||"]:
+            return "Boolean"
 
-        # Перевірка на невідповідність типів, якщо вони не включають приведення Int + Float
+        if left_operand_type in ["Int", "Float"] and right_operand_type in ["Int", "Float"]:
+            if operator == "/":
+                if self.get_operand_value() == 0:
+                    self.errors.append(f"Error on line {line}: Division by zero.")
+                return "Float" if left_operand_type == "Float" or right_operand_type == "Float" else "Int"
+
+            if operator in ["+", "-", "*", "/"]:
+                return "Float" if "Float" in [left_operand_type, right_operand_type] else "Int"
+
         if left_operand_type != right_operand_type and operator not in ["+"]:
             self.errors.append(
                 f"Error on line {line}: Type mismatch in operation '{operator}' between {left_operand_type} and {right_operand_type}."
             )
             return "Mismatched Types"
-
-        if operator == "/":
-            if self.get_operand_value() == 0:
-                self.errors.append(f"Error on line {line}: Division by zero.")
-            if left_operand_type == "Int":
-                return "Int"
-            elif left_operand_type == "Float":
-                return "Float"
-
-        if operator == "+":
-            if "String" in [left_operand_type, right_operand_type]:
-                return "String"
-            return left_operand_type
 
         return left_operand_type
 
@@ -246,57 +251,62 @@ class Semantic:
         current_line, _, _, _ = self.symbols_table[self.current_index]
 
         while self.current_index < len(self.symbols_table):
-            line_number, lexeme, token_type, _  = self.symbols_table[self.current_index]
+            line_number, lexeme, token_type, _ = self.symbols_table[self.current_index]
 
+            # Перевірка переходу на новий рядок
             if line_number != current_line:
                 break
 
-          #  print(f'{line_number} _____ {lexeme}')
-
+            # Обробка констант (Boolean)
             if lexeme in ["false", "true"]:
-                expr_type = "Boolean"
-                break
+                expr_type = self.update_type(expr_type, "Boolean")
+                self.current_index += 1
+                continue
 
+            # Обробка операторів порівняння
             if token_type == "comp_op" or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
                 expr_type = "Boolean"
-                break
+                self.current_index += 1
+                continue
 
+            # Обробка чисел (Int, Float)
             if token_type == "int" or lexeme.isdigit():
-                if expr_type is None or expr_type == "Int":
-                    expr_type = "Int"
-                elif expr_type == "Float":
-                    expr_type = "Float"
-                else:
-                    expr_type = "Mismatched Types"
+                expr_type = self.update_type(expr_type, "Int")
             elif token_type == "float" or self.is_float_literal(lexeme):
-                if expr_type is None or expr_type in ["Int", "Float"]:
-                    expr_type = "Float"
-                else:
-                    expr_type = "Mismatched Types"
+                expr_type = self.update_type(expr_type, "Float")
 
+            # Обробка рядків
             elif token_type == "string":
-                if expr_type is None:
-                    expr_type = "String"
-                else:
-                    expr_type = "String"
+                expr_type = self.update_type(expr_type, "String")
 
+            # Обробка змінних
             elif token_type == "id" and lexeme in self.variables:
                 var_type = self.variables[lexeme]["type"]
-                if expr_type is None:
-                    expr_type = var_type
-                elif expr_type != var_type:
-                    if expr_type == "Float" and var_type == "Int":
-                        expr_type = "Float"
-                    else :
-                        expr_type = "Mismatched Types"
+                expr_type = self.update_type(expr_type, var_type)
 
+            # Обробка операторів
             if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
 
             self.current_index += 1
 
         return expr_type if found_operator or expr_type else "unknown"
+
+    def update_type(self, current_type, new_type):
+        if current_type is None:
+            return new_type
+        if current_type == new_type:
+            return current_type
+        if current_type == "Float" and new_type == "Int":
+            return "Float"
+        if current_type == "Int" and new_type == "Float":
+            return "Float"
+        if current_type == "Boolean" or new_type == "Boolean":
+            if current_type in ["Int", "Float", "String"]:
+                return "Mismatched Types"
+            return "Boolean"
+        return "Mismatched Types"
 
     def get_operand_value(self):
         _, operand, _, _ = self.symbols_table[self.current_index-1]
