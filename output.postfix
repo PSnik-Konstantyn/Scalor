@@ -9,6 +9,14 @@
 )
 
 .constants(
+   10    Int       
+   2     Int       
+   5.5   Float     
+   5     Int       
+   4     Int       
+   He    String    
+   llo   String    
+   false Boolean   
 )
 
 .code(
@@ -29,6 +37,9 @@
    He    String
    llo   String
    +     add_op
+   =     assign_op
+   isAc  l-val
+   false Boolean
    =     assign_op
    x     l-val
    x     r-val

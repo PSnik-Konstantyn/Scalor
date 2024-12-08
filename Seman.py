@@ -270,6 +270,9 @@ class Semantic:
                 self.generator.emit(lexeme, "Boolean")
                 operand_stack.append(lexeme)
                 self.current_index += 1
+                if lexeme not in self.generator.tableOfConst:
+                    self.generator.tableOfConst[lexeme] = "Boolean"
+                self.current_index += 1
                 continue
 
             # Обробка операторів порівняння
@@ -285,16 +288,25 @@ class Semantic:
                 expr_type = self.update_type(expr_type, "Int")
                 self.generator.emit(lexeme, "Int")
                 operand_stack.append(lexeme)
+                # Збереження у tableOfConst
+                if lexeme not in self.generator.tableOfConst:
+                    self.generator.tableOfConst[lexeme] = "Int"
             elif token_type == "float" or self.is_float_literal(lexeme):
                 expr_type = self.update_type(expr_type, "Float")
                 self.generator.emit(lexeme, "Float")
                 operand_stack.append(lexeme)
+                # Збереження у tableOfConst
+                if lexeme not in self.generator.tableOfConst:
+                    self.generator.tableOfConst[lexeme] = "Float"
 
             # Обробка рядків
             elif token_type == "string":
                 expr_type = self.update_type(expr_type, "String")
                 self.generator.emit(lexeme, "String")
                 operand_stack.append(lexeme)
+                # Збереження у tableOfConst
+                if lexeme not in self.generator.tableOfConst:
+                    self.generator.tableOfConst[lexeme] = "String"
 
             # Обробка змінних
             elif token_type == "id" and lexeme in self.variables:

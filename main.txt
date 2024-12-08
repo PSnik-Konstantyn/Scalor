@@ -3,4 +3,6 @@ val y2 : Float = 5.5
 var isAc : Boolean = 5 < 4
 val mess : String = "He" + "llo"
 
+isAc = false
+
 x = x + 4
