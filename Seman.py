@@ -114,6 +114,7 @@ class Semantic:
             }
             self.generator.tableOfVar[var_name] = (len(self.generator.tableOfVar) + 1, var_type)
 
+            self.generator.emit(var_name, "l-val")  # Ліва частина присвоєння
             # Генерація коду для ініціалізації
             expr_type = self.evaluate_expression()  # Обчислення типу виразу для ініціалізації
             if expr_type != "unknown" and expr_type != var_type:
@@ -121,7 +122,7 @@ class Semantic:
                     f"Error on line {line}: Type mismatch in initialization of '{var_name}'. Expected {var_type}, but got {expr_type}.")
                 return
 
-            self.generator.emit(var_name, "l-val")  # Ліва частина присвоєння
+
             self.generator.emit("=", "assign_op")  # Операція присвоєння
 
     def handle_assignment(self, line):
@@ -138,6 +139,10 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Cannot assign to immutable variable '{var_name}'.")
             return
 
+        self.generator.emit(var_name, "l-val")
+
+        self.get_next_token("assign_op")
+
         expr_type = self.evaluate_expression()
         if expr_type == "Mismatched Types":
             self.errors.append(f"Error on line {line}: Type mismatch in assignment expression.")
@@ -147,9 +152,8 @@ class Semantic:
             )
 
         self.variables[var_name]["initialized"] = True
-
-        self.generator.emit(var_name, "l-val")
         self.generator.emit("=", "assign_op")
+
 
     def handle_control_structure(self, line, structure_type):
         condition_type = self.evaluate_expression()
@@ -250,6 +254,9 @@ class Semantic:
 
         current_line, _, _, _ = self.symbols_table[self.current_index]
 
+        operand_stack = []  # Стек для операндів
+        operator_stack = []  # Стек для операторів
+
         while self.current_index < len(self.symbols_table):
             line_number, lexeme, token_type, _ = self.symbols_table[self.current_index]
 
@@ -260,6 +267,8 @@ class Semantic:
             # Обробка констант (Boolean)
             if lexeme in ["false", "true"]:
                 expr_type = self.update_type(expr_type, "Boolean")
+                self.generator.emit(lexeme, "Boolean")
+                operand_stack.append(lexeme)
                 self.current_index += 1
                 continue
 
@@ -267,29 +276,61 @@ class Semantic:
             if token_type == "comp_op" or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
                 expr_type = "Boolean"
+                operator_stack.append(lexeme)
                 self.current_index += 1
                 continue
 
             # Обробка чисел (Int, Float)
             if token_type == "int" or lexeme.isdigit():
                 expr_type = self.update_type(expr_type, "Int")
+                self.generator.emit(lexeme, "Int")
+                operand_stack.append(lexeme)
             elif token_type == "float" or self.is_float_literal(lexeme):
                 expr_type = self.update_type(expr_type, "Float")
+                self.generator.emit(lexeme, "Float")
+                operand_stack.append(lexeme)
 
             # Обробка рядків
             elif token_type == "string":
                 expr_type = self.update_type(expr_type, "String")
+                self.generator.emit(lexeme, "String")
+                operand_stack.append(lexeme)
 
             # Обробка змінних
             elif token_type == "id" and lexeme in self.variables:
                 var_type = self.variables[lexeme]["type"]
                 expr_type = self.update_type(expr_type, var_type)
+                self.generator.emit(lexeme, "r-val")
+                operand_stack.append(lexeme)
 
             # Обробка операторів
-            if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["<=", ">=", "!=", "=="]:
+            if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["+", "-", "*", "/", "^"]:
                 found_operator = True
+                operator_stack.append(lexeme)
 
             self.current_index += 1
+
+        # Генерація коду для всіх операторів у стеку
+        while operator_stack:
+            if len(operand_stack) < 2:  # Перевіряємо, чи вистачає операндів
+                self.errors.append(f"Error: Missing operand for operator '{operator_stack[-1]}'.")
+                break  # Уникаємо зациклення
+
+            operator = operator_stack.pop()
+            type_of_op = "op"
+
+            # Прив'язка операторів до типів
+            if operator in ["+", "-"]:
+                type_of_op = "add_op"
+            elif operator == "*":
+                type_of_op = "mult_op"
+            elif operator == "/":
+                type_of_op = "divide_op"
+            elif operator == "^":
+                type_of_op = "pow_op"  # Піднесення до степеня
+
+            # Генерація коду для оператора
+            self.generator.emit(operator, type_of_op)
 
         return expr_type if found_operator or expr_type else "unknown"
 

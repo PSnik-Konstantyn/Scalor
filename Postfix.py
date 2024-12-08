@@ -1,8 +1,8 @@
 class PostfixGenerator:
     def __init__(self):
-        self.tableOfVar = {}  # Змінні
-        self.tableOfLabel = {}  # Мітки
-        self.tableOfConst = {}  # Константи
+        self.tableOfVar = {}  # Таблиця змінних
+        self.tableOfLabel = {}  # Таблиця міток
+        self.tableOfConst = {}  # Таблиця констант
         self.postfixCodeTSM = []  # Постфіксний код
         self.labelCounter = 0
 
@@ -28,3 +28,31 @@ class PostfixGenerator:
 
     def emit(self, opcode, operand=None):
         self.postfixCodeTSM.append((opcode, operand))
+
+
+def save_postfix_code(file_name, generator):
+    fname = f"{file_name}.postfix"
+    with open(fname, 'w') as f:
+        f.write(".target: Postfix Machine\n.version: 0.2\n")
+
+        # Змінні
+        f.write("\n.vars(\n")
+        for var, var_type in generator.tableOfVar.items():
+            f.write(f"   {var:<6}{var_type:<10}\n")
+        f.write(")\n")
+
+        # Константи
+        f.write("\n.constants(\n")
+        for const, const_type in generator.tableOfConst.items():
+            f.write(f"   {const:<6}{const_type:<10}\n")
+        f.write(")\n")
+
+        # Код
+        f.write("\n.code(\n")
+        for opcode, operand in generator.postfixCodeTSM:
+            if operand is not None:
+                f.write(f"   {opcode:<6}{operand}\n")
+            else:
+                f.write(f"   {opcode:<6}\n")
+        f.write(")\n")
+    print(f"Postfix code saved to {fname}")

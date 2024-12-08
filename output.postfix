@@ -4,9 +4,8 @@
 .vars(
    x     Int       
    y2    Float     
-   isActiveBoolean   
-   messageString    
-   w     Float     
+   isAc  Boolean   
+   mess  String    
 )
 
 .constants(
@@ -14,26 +13,26 @@
 
 .code(
    x     l-val
+   10    Int
+   2     Int
+   /     divide_op
    =     assign_op
    y2    l-val
+   5.5   Float
    =     assign_op
-   isActivel-val
+   isAc  l-val
+   5     Int
+   4     Int
+   <     op
    =     assign_op
-   messagel-val
+   mess  l-val
+   He    String
+   llo   String
+   +     add_op
    =     assign_op
-   input x
-   print x
    x     l-val
+   x     r-val
+   4     Int
+   +     add_op
    =     assign_op
-   print message
-   print Not active
-   print y2
-   print Smaller
-   print x is greater
-   print nothing is greater
-   w     l-val
-   =     assign_op
-   w     l-val
-   =     assign_op
-   print w
 )

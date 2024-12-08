@@ -1,33 +1,6 @@
-var x : Int = 10
+var x : Int = 10 / 2
 val y2 : Float = 5.5
-var isActive : Boolean = 5 > 4
-val message : String = "Hello Scalor"
+var isAc : Boolean = 5 < 4
+val mess : String = "He" + "llo"
 
-input(x)
-
-// comment example val y3 : Float = 5.5 add input check
-
-while (x >= 0.1) {
-   print(x)
-   x = x - 12
-}
-
-if (isActive == true) {
-   print(message)
-} else {
-   print("Not active")
-   if (y2 >= 3 ) {
-       print(y2)
-   } else {
-       print("Smaller")
-       if ( 0 <= x - 2 ) {
-           print("x is greater")
-       } else {
-           print("nothing is greater")
-       }
-   }
-}
-
-var w : Float = -2.3
-w = y2 + x
-print(w)
+x = x + 4
