@@ -3,20 +3,20 @@
 
 .vars(
    x     Int       
-   y2    Float     
-   isAc  Boolean   
-   mess  String    
+)
+
+.labels(
+   m1    5
+   m2    undefined
+   m3    12
 )
 
 .constants(
    10    Int       
    2     Int       
-   5.5   Float     
-   5     Int       
    4     Int       
-   He    String    
-   llo   String    
-   false Boolean   
+   5     Int       
+   1     Int       
 )
 
 .code(
@@ -25,25 +25,23 @@
    2     Int
    /     divide_op
    =     assign_op
-   y2    l-val
-   5.5   Float
-   =     assign_op
-   isAc  l-val
-   5     Int
-   4     Int
-   <     op
-   =     assign_op
-   mess  l-val
-   He    String
-   llo   String
-   +     add_op
-   =     assign_op
-   isAc  l-val
-   false Boolean
-   =     assign_op
-   x     l-val
+   m1    label
    x     r-val
    4     Int
-   +     add_op
+   >     op
+   JF    jf
+   JMP   m1
+   m2    label
+   x     r-val
+   5     Int
+   ==    op
+   JF    jf
+   m3    label
+   OUT   print
+   OUT   print
+   x     l-val
+   x     r-val
+   1     Int
+   -     add_op
    =     assign_op
 )

@@ -1,8 +1,12 @@
 var x : Int = 10 / 2
-val y2 : Float = 5.5
-var isAc : Boolean = 5 < 4
-val mess : String = "He" + "llo"
 
-isAc = false
+while (x >= 4) {
+    if(x == 5){
+        print(x)
+    } else {
+        print(true)
+    }
+    x = x - 1
+}
 
-x = x + 4
+

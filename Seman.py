@@ -67,7 +67,7 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Expected ')' after variable name in 'input'.")
             return
 
-        self.generator.emit("input", var_name)
+        self.generator.emit("IN", "input")
 
     def handle_print(self, line):
         self.get_next_token("par_op")
@@ -77,16 +77,7 @@ class Semantic:
             self.errors.append(f"Помилка на лінії {line}: Очікувалось ім'я змінної або константа для 'print'.")
             return
 
-        if value.isdigit():
-            self.generator.emit("print", value)
-        elif self.is_float_literal(value):
-            self.generator.emit("print", value)
-        elif value in ["true", "false"]:
-            self.generator.emit("print", value)
-        elif value in self.variables:
-            self.generator.emit("print", value)
-        else:
-            self.generator.emit("print", value)
+        self.generator.emit("OUT", "print")
 
         self.get_next_token("par_op")
 
@@ -154,11 +145,41 @@ class Semantic:
         self.variables[var_name]["initialized"] = True
         self.generator.emit("=", "assign_op")
 
-
     def handle_control_structure(self, line, structure_type):
-        condition_type = self.evaluate_expression()
-        if condition_type != "Boolean":
-            self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
+        start_label = f"m{len(self.generator.tableOfLabel) + 1}"
+        self.generator.tableOfLabel[start_label] = len(self.generator.postfixCodeTSM)
+
+        if structure_type == "if":
+            condition_type = self.evaluate_expression()
+            if condition_type != "Boolean":
+                self.errors.append(f"Error on line {line}: Condition in 'if' should be boolean.")
+                return
+
+            self.generator.emit("JF", "jf")
+
+        elif structure_type == "while":
+            loop_start_label = start_label
+            loop_end_label = f"m{len(self.generator.tableOfLabel) + 1}"
+
+            self.generator.tableOfLabel[loop_end_label] = None
+            self.generator.emit(loop_start_label, "label")
+
+            condition_type = self.evaluate_expression()
+            if condition_type != "Boolean":
+                self.errors.append(f"Error on line {line}: Condition in 'while' should be boolean.")
+                return
+
+            self.generator.emit("JF", "jf")  # Jump if False (умова не виконується)
+
+            # Обробка тіла циклу
+            # Генерація коду для тіла циклу тут (імітуючи вкладеність)
+
+            self.generator.emit("JMP", loop_start_label)  # Повернення до початку циклу
+            self.generator.emit(loop_end_label, "label")  # Позначення кінця циклу
+
+        # Оновлення таблиці міток для `if` після виконання тіла
+        if structure_type == "if":
+            self.generator.emit(start_label, "label")  # Позначення мітки після виконання `if`
 
     def get_next_token(self, expected=None):
         self.current_index += 1
@@ -381,6 +402,12 @@ def save_postfix_code(file_name, generator, variables):
         f.write("\n.vars(\n")
         for var, var_details in variables.items():  # Використовуємо 'variables' замість 'self.variables'
             f.write(f"   {var:<6}{var_details['type']:<10}\n")
+        f.write(")\n")
+        f.write("\n.labels(\n")
+        for lbl, pos in generator.tableOfLabel.items():
+            if pos is None:
+                pos = "undefined"
+            f.write(f"   {lbl:<6}{pos}\n")
         f.write(")\n")
         f.write("\n.constants(\n")
         for const, const_type in generator.tableOfConst.items():
