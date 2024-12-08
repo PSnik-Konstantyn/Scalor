@@ -3,8 +3,9 @@ var x : Int = 10 / 2
 while (x >= 4) {
     if(x == 5){
         x = x - 3
-    } else {
-        print(x)
+    }
+     if(x == 5){
+        x = x - 3
     }
     x = x - 1
 }

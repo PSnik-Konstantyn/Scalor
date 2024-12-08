@@ -159,7 +159,7 @@ class Semantic:
             false_label = f"m{len(self.generator.tableOfLabel) + 1}"
             self.generator.emit("JF", "jf")
 
-            has_else = self.has_else_block(line)
+            has_else = self.has_else_block(self.current_index)
 
             if has_else:
                 end_label = f"m{len(self.generator.tableOfLabel) + 1}"

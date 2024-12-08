@@ -2,7 +2,7 @@
 .version: 0.2
 
 .vars(
-   x     int
+   x     Int       
 )
 
 .labels(
@@ -10,6 +10,8 @@
    m2    11
    m3    12
    m4    16
+   m5    22
+   m6    26
 )
 
 .constants(
@@ -44,7 +46,16 @@
    3     int
    -     add_op
    =     assign_op
-   OUT   print
+   x     r-val
+   5     int
+   ==    op
+   JF    jf
+   m6    label
+   x     l-val
+   x     r-val
+   3     int
+   -     add_op
+   =     assign_op
    x     l-val
    x     r-val
    1     int
