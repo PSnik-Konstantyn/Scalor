@@ -16,7 +16,7 @@ class PostfixGenerator:
 
     def add_variable(self, var_name, var_type):
         if var_name not in self.tableOfVar:
-            self.tableOfVar[var_name] = (len(self.tableOfVar), var_type)
+            self.tableOfVar[var_name] = (len(self.tableOfVar), var_type.lower())
         else:
             print(f"Warning: Variable '{var_name}' is already defined.")
 

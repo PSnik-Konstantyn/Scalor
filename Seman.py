@@ -103,7 +103,8 @@ class Semantic:
                 "initialized": True,  # Завжди ініціалізована
                 "immutable": decl_type == "val"
             }
-            self.generator.tableOfVar[var_name] = (len(self.generator.tableOfVar) + 1, var_type)
+            new_v = var_type.lower()
+            self.generator.tableOfVar[var_name] = (len(self.generator.tableOfVar) + 1, new_v)
 
             self.generator.emit(var_name, "l-val")  # Ліва частина присвоєння
             # Генерація коду для ініціалізації
@@ -155,13 +156,28 @@ class Semantic:
                 self.errors.append(f"Error on line {line}: Condition in 'if' should be boolean.")
                 return
 
+            false_label = f"m{len(self.generator.tableOfLabel) + 1}"
             self.generator.emit("JF", "jf")
+
+            has_else = self.has_else_block(line)
+
+            if has_else:
+                end_label = f"m{len(self.generator.tableOfLabel) + 1}"
+                self.generator.emit("JMP", end_label)
+
+                self.generator.tableOfLabel[false_label] = len(self.generator.postfixCodeTSM)
+                self.generator.emit(false_label, "label")
+
+                self.generator.tableOfLabel[end_label] = len(self.generator.postfixCodeTSM)
+                self.generator.emit(end_label, "label")
+            else:
+                self.generator.tableOfLabel[false_label] = len(self.generator.postfixCodeTSM)
+                self.generator.emit(false_label, "label")
 
         elif structure_type == "while":
             loop_start_label = start_label
             loop_end_label = f"m{len(self.generator.tableOfLabel) + 1}"
 
-            self.generator.tableOfLabel[loop_end_label] = None
             self.generator.emit(loop_start_label, "label")
 
             condition_type = self.evaluate_expression()
@@ -169,17 +185,30 @@ class Semantic:
                 self.errors.append(f"Error on line {line}: Condition in 'while' should be boolean.")
                 return
 
-            self.generator.emit("JF", "jf")  # Jump if False (умова не виконується)
+            self.generator.emit("JF", "jf")
 
-            # Обробка тіла циклу
-            # Генерація коду для тіла циклу тут (імітуючи вкладеність)
+            self.generator.emit("JMP", loop_start_label)
 
-            self.generator.emit("JMP", loop_start_label)  # Повернення до початку циклу
-            self.generator.emit(loop_end_label, "label")  # Позначення кінця циклу
+            self.generator.tableOfLabel[loop_end_label] = len(self.generator.postfixCodeTSM)
+            self.generator.emit(loop_end_label, "label")
 
-        # Оновлення таблиці міток для `if` після виконання тіла
-        if structure_type == "if":
-            self.generator.emit(start_label, "label")  # Позначення мітки після виконання `if`
+    def find_next_if_or_else(self, start_index):
+
+        for index in range(start_index, len(tableOfSymb) + 1):
+            token = tableOfSymb.get(index)
+            if token and token[1] in {"if", "else"}:
+                return token[1], index
+        return None
+
+    def has_else_block(self, start_index):
+        next_token = self.find_next_if_or_else(start_index + 1)
+        if next_token:
+            token_type, token_index = next_token
+            if token_type == "else":
+                return True
+            elif token_type == "if":
+                return False
+        return False
 
     def get_next_token(self, expected=None):
         self.current_index += 1
@@ -288,11 +317,11 @@ class Semantic:
             # Обробка констант (Boolean)
             if lexeme in ["false", "true"]:
                 expr_type = self.update_type(expr_type, "Boolean")
-                self.generator.emit(lexeme, "Boolean")
+                self.generator.emit(lexeme, "bool")
                 operand_stack.append(lexeme)
                 self.current_index += 1
                 if lexeme not in self.generator.tableOfConst:
-                    self.generator.tableOfConst[lexeme] = "Boolean"
+                    self.generator.tableOfConst[lexeme] = "bool"
                 self.current_index += 1
                 continue
 
@@ -307,18 +336,18 @@ class Semantic:
             # Обробка чисел (Int, Float)
             if token_type == "int" or lexeme.isdigit():
                 expr_type = self.update_type(expr_type, "Int")
-                self.generator.emit(lexeme, "Int")
+                self.generator.emit(lexeme, "int")
                 operand_stack.append(lexeme)
                 # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
-                    self.generator.tableOfConst[lexeme] = "Int"
+                    self.generator.tableOfConst[lexeme] = "int"
             elif token_type == "float" or self.is_float_literal(lexeme):
                 expr_type = self.update_type(expr_type, "Float")
-                self.generator.emit(lexeme, "Float")
+                self.generator.emit(lexeme, "float")
                 operand_stack.append(lexeme)
                 # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
-                    self.generator.tableOfConst[lexeme] = "Float"
+                    self.generator.tableOfConst[lexeme] = "float"
 
             # Обробка рядків
             elif token_type == "string":

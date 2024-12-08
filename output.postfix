@@ -2,46 +2,52 @@
 .version: 0.2
 
 .vars(
-   x     Int       
+   x     int
 )
 
 .labels(
    m1    5
-   m2    undefined
+   m2    11
    m3    12
+   m4    16
 )
 
 .constants(
-   10    Int       
-   2     Int       
-   4     Int       
-   5     Int       
-   1     Int       
+   10    int       
+   2     int       
+   4     int       
+   5     int       
+   3     int       
+   1     int       
 )
 
 .code(
    x     l-val
-   10    Int
-   2     Int
+   10    int
+   2     int
    /     divide_op
    =     assign_op
    m1    label
    x     r-val
-   4     Int
+   4     int
    >     op
    JF    jf
    JMP   m1
    m2    label
    x     r-val
-   5     Int
+   5     int
    ==    op
    JF    jf
-   m3    label
-   OUT   print
+   m4    label
+   x     l-val
+   x     r-val
+   3     int
+   -     add_op
+   =     assign_op
    OUT   print
    x     l-val
    x     r-val
-   1     Int
+   1     int
    -     add_op
    =     assign_op
 )
