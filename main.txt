@@ -1,13 +1,5 @@
-var x : Int = 10 / 2
+var x : Int = 10
 
-while (x >= 4) {
-    if(x == 5){
-        x = x - 3
-    }
-     if(x == 5){
-        x = x - 3
-    }
-    x = x - 1
-}
+x = 2
 
-
+print(x)

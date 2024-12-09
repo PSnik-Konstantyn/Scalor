@@ -67,6 +67,7 @@ class Semantic:
             self.errors.append(f"Error on line {line}: Expected ')' after variable name in 'input'.")
             return
 
+        self.generator.emit(var_name, "l-val")
         self.generator.emit("IN", "input")
 
     def handle_print(self, line):
@@ -77,6 +78,7 @@ class Semantic:
             self.errors.append(f"Помилка на лінії {line}: Очікувалось ім'я змінної або константа для 'print'.")
             return
 
+        self.generator.emit(value, "l-val")
         self.generator.emit("OUT", "print")
 
         self.get_next_token("par_op")
@@ -317,11 +319,11 @@ class Semantic:
             # Обробка констант (Boolean)
             if lexeme in ["false", "true"]:
                 expr_type = self.update_type(expr_type, "Boolean")
-                self.generator.emit(lexeme, "bool")
+                self.generator.emit(lexeme, "Boolean")
                 operand_stack.append(lexeme)
                 self.current_index += 1
                 if lexeme not in self.generator.tableOfConst:
-                    self.generator.tableOfConst[lexeme] = "bool"
+                    self.generator.tableOfConst[lexeme] = "Boolean"
                 self.current_index += 1
                 continue
 
@@ -336,18 +338,18 @@ class Semantic:
             # Обробка чисел (Int, Float)
             if token_type == "int" or lexeme.isdigit():
                 expr_type = self.update_type(expr_type, "Int")
-                self.generator.emit(lexeme, "int")
+                self.generator.emit(lexeme, "Int")
                 operand_stack.append(lexeme)
                 # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
-                    self.generator.tableOfConst[lexeme] = "int"
+                    self.generator.tableOfConst[lexeme] = "Int"
             elif token_type == "float" or self.is_float_literal(lexeme):
                 expr_type = self.update_type(expr_type, "Float")
-                self.generator.emit(lexeme, "float")
+                self.generator.emit(lexeme, "Float")
                 operand_stack.append(lexeme)
                 # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
-                    self.generator.tableOfConst[lexeme] = "float"
+                    self.generator.tableOfConst[lexeme] = "Float"
 
             # Обробка рядків
             elif token_type == "string":

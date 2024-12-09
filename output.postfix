@@ -6,59 +6,20 @@
 )
 
 .labels(
-   m1    5
-   m2    11
-   m3    12
-   m4    16
-   m5    22
-   m6    26
 )
 
 .constants(
-   10    int       
-   2     int       
-   4     int       
-   5     int       
-   3     int       
-   1     int       
+   10    Int       
+   2     Int       
 )
 
 .code(
    x     l-val
-   10    int
-   2     int
-   /     divide_op
-   =     assign_op
-   m1    label
-   x     r-val
-   4     int
-   >     op
-   JF    jf
-   JMP   m1
-   m2    label
-   x     r-val
-   5     int
-   ==    op
-   JF    jf
-   m4    label
-   x     l-val
-   x     r-val
-   3     int
-   -     add_op
-   =     assign_op
-   x     r-val
-   5     int
-   ==    op
-   JF    jf
-   m6    label
-   x     l-val
-   x     r-val
-   3     int
-   -     add_op
+   10    Int
    =     assign_op
    x     l-val
-   x     r-val
-   1     int
-   -     add_op
+   2     Int
    =     assign_op
+   x     l-val
+   OUT   print
 )
