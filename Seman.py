@@ -78,7 +78,7 @@ class Semantic:
             self.errors.append(f"Помилка на лінії {line}: Очікувалось ім'я змінної або константа для 'print'.")
             return
 
-        self.generator.emit(value, "l-val")
+        self.generator.emit(value, "r-val")
         self.generator.emit("OUT", "print")
 
         self.get_next_token("par_op")
@@ -149,50 +149,101 @@ class Semantic:
         self.generator.emit("=", "assign_op")
 
     def handle_control_structure(self, line, structure_type):
-        start_label = f"m{len(self.generator.tableOfLabel) + 1}"
-        self.generator.tableOfLabel[start_label] = len(self.generator.postfixCodeTSM)
+        self.get_next_token()
+
+        condition_type = self.evaluate_expression()
+        if condition_type != "Boolean":
+            self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
+            return
+
+        self.get_next_token()
 
         if structure_type == "if":
-            condition_type = self.evaluate_expression()
-            if condition_type != "Boolean":
-                self.errors.append(f"Error on line {line}: Condition in 'if' should be boolean.")
-                return
+            label_false = self.generator.generate_label()
+            self.generator.emit("JF", "lf")
 
-            false_label = f"m{len(self.generator.tableOfLabel) + 1}"
+            self.get_next_token()
+            self.get_next_token()
+            self.get_next_token()
+
+        # {
+            next_if = self.generator.generate_label()
+            leave = self.generator.generate_label()
+
+
             self.generator.emit("JF", "jf")
 
-            has_else = self.has_else_block(self.current_index)
 
-            if has_else:
-                end_label = f"m{len(self.generator.tableOfLabel) + 1}"
-                self.generator.emit("JMP", end_label)
+            self.process_block()
 
-                self.generator.tableOfLabel[false_label] = len(self.generator.postfixCodeTSM)
-                self.generator.emit(false_label, "label")
+            if self.has_else_block(self.current_index):
+                label_end = self.generator.generate_label()
+                self.generator.emit("JMP", "jump")
+                self.generator.emit(label_false, "label")
 
-                self.generator.tableOfLabel[end_label] = len(self.generator.postfixCodeTSM)
-                self.generator.emit(end_label, "label")
+                self.current_index = self.current_index - 1
+                next_token = self.get_next_token()
+                if next_token != "else":
+                    self.errors.append(f"Error on line {line}: Expected 'else' after 'if' block.")
+                    return
+                brace_open = self.get_next_token("brace_op")
+                if brace_open != "{":
+                    self.errors.append(f"Error on line {line}: Expected '{{' to start 'else' block.")
+                    return
+                self.process_block()
             else:
-                self.generator.tableOfLabel[false_label] = len(self.generator.postfixCodeTSM)
-                self.generator.emit(false_label, "label")
+                self.generator.emit(label_false, "label")
 
         elif structure_type == "while":
-            loop_start_label = start_label
-            loop_end_label = f"m{len(self.generator.tableOfLabel) + 1}"
+            loop_start_label = self.generator.generate_label()
+            loop_end_label = self.generator.generate_label()
 
             self.generator.emit(loop_start_label, "label")
-
             condition_type = self.evaluate_expression()
             if condition_type != "Boolean":
                 self.errors.append(f"Error on line {line}: Condition in 'while' should be boolean.")
                 return
+            self.generator.emit("JF", loop_end_label)
 
-            self.generator.emit("JF", "jf")
+            # Обробка блоку 'while'
+            brace_open = self.get_next_token("brace_op")
+            if brace_open != "{":
+                self.errors.append(f"Error on line {line}: Expected '{{' to start 'while' block.")
+                return
+            self.process_block()  # Обробка команд у блоці
 
+            # Повернення до початку циклу
             self.generator.emit("JMP", loop_start_label)
-
-            self.generator.tableOfLabel[loop_end_label] = len(self.generator.postfixCodeTSM)
             self.generator.emit(loop_end_label, "label")
+
+    def process_block(self):
+        while self.current_index < len(self.symbols_table):
+            line, lexeme, token_type, _ = self.symbols_table[self.current_index]
+            if lexeme == "}":  # Кінець блоку
+                self.current_index += 1
+                break
+            if token_type == "id":
+                if lexeme in ["true", "false"]:
+                    continue
+                if lexeme not in self.variables:
+                    self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before declaration.")
+                elif not self.variables[lexeme]["initialized"]:
+                    self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before initialization.")
+            elif token_type == "keyword":
+                if lexeme in ["val", "var"]:
+                    self.handle_declaration(line, lexeme)
+                elif lexeme in ["if", "while"]:
+                    self.handle_control_structure(line, lexeme)
+                elif lexeme == "input":
+                    self.handle_input(line)
+                elif lexeme == "print":
+                    self.handle_print(line)
+            elif token_type == "assign_op" and lexeme == '=':
+                self.handle_assignment(line)
+            elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
+                self.handle_operation(line, lexeme)
+
+            self.current_index += 1
 
     def find_next_if_or_else(self, start_index):
 
@@ -321,7 +372,6 @@ class Semantic:
                 expr_type = self.update_type(expr_type, "Boolean")
                 self.generator.emit(lexeme, "Boolean")
                 operand_stack.append(lexeme)
-                self.current_index += 1
                 if lexeme not in self.generator.tableOfConst:
                     self.generator.tableOfConst[lexeme] = "Boolean"
                 self.current_index += 1
@@ -396,6 +446,7 @@ class Semantic:
             # Генерація коду для оператора
             self.generator.emit(operator, type_of_op)
 
+        # Повертаємо тип виразу або "unknown", якщо немає операндів/операторів
         return expr_type if found_operator or expr_type else "unknown"
 
     def update_type(self, current_type, new_type):

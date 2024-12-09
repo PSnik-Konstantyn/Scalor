@@ -13,11 +13,11 @@ def f2i(floatVal):
 
 
 def getValue(lex, tok):
-    if tok == 'float':
+    if tok == 'Float':
         return float(lex)
-    elif tok == 'int':
+    elif tok == 'Int':
         return int(lex)
-    elif tok == 'bool':
+    elif tok == 'Boolean':
         return lex
 
 

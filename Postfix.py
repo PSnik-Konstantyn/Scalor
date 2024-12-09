@@ -11,7 +11,7 @@ class PostfixGenerator:
         while label in self.tableOfLabel:
             self.labelCounter += 1
             label = f"m{self.labelCounter}"
-        self.tableOfLabel[label] = len(self.tableOfLabel)
+        self.tableOfLabel[label] = len(self.postfixCodeTSM)
         return label
 
     def add_variable(self, var_name, var_type):

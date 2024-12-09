@@ -2,24 +2,38 @@
 .version: 0.2
 
 .vars(
-   x     Int       
+   x     Float     
+   y     Float     
 )
 
 .labels(
+   m0    14
 )
 
 .constants(
-   10    Int       
-   2     Int       
+   10.0  Float     
+   1.0   Float     
+   2.1   Float     
+   1.2   Float     
 )
 
 .code(
    x     l-val
-   10    Int
+   10.0  Float
+   =     assign_op
+   y     l-val
+   1.0   Float
    =     assign_op
    x     l-val
-   2     Int
+   2.1   Float
+   1.2   Float
+   +     add_op
    =     assign_op
-   x     l-val
+   x     r-val
+   10.0  Float
+   ==    op
+   JF    lf
+   m0    label
+   x     r-val
    OUT   print
 )

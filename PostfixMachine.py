@@ -278,15 +278,13 @@ class PSM():  # Postfix Stack Macine
         (lexR, typeR, valR) = lexTypeValR
         if typeL != typeR:
             if {typeL, typeR} == {'Int', 'Float'}:
-                # Якщо типи intnum і floatnum, обидва значення переводяться у floatnum
+                # Якщо типи intnum і floatnum, обидва значення переводяться у float
                 typeL = typeR = 'Float'
                 valL = float(valL)
                 valR = float(valR)
             else:
                 raise PSMExcept(9)
         if arthBoolOp == '+':
-            print('!!!!')
-            print(valL , valR)
             value = valL + valR
         elif arthBoolOp == '-':
             value = valL - valR
