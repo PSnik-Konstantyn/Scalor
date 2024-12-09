@@ -31,8 +31,10 @@ class Semantic:
                 elif lexeme == "input":
                     self.handle_input(line)
                 elif lexeme == "print":
+                    self.generator.emit("Bad1", self.current_index)
                     self.handle_print(line)
             elif token_type == "assign_op" and lexeme == '=':
+                self.generator.emit("Bad2", self.current_index)
                 self.handle_assignment(line)
             elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
                 self.handle_operation(line, lexeme)
@@ -188,10 +190,11 @@ class Semantic:
                 return
 
             self.process_block()  # Розберіть блок else
+            # check
             self.generator.init_label(leave)
 
         self.generator.init_label(leave)
-
+        self.generator.emit("Stop", self.current_index)
 
     def process_block(self):
         while self.current_index < len(self.symbols_table):

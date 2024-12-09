@@ -6,8 +6,8 @@
 )
 
 .labels(
-   m1    20
-   m2    22
+   m1    22
+   m2    24
 )
 
 .constants(
@@ -22,6 +22,8 @@
    x     l-val
    10.0  Float
    =     assign_op
+   Bad2  4
+   Bad2  7
    x     l-val
    2.1   Float
    1.2   Float
@@ -43,11 +45,14 @@
    :     colon
    m2    label
    :     colon
+   Stop  28
+   Bad2  19
    x     l-val
    x     r-val
    1.0   Float
    +     add_op
    =     assign_op
+   Bad1  23
    x     r-val
    OUT   print
 )

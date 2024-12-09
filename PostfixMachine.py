@@ -232,7 +232,6 @@ class PSM():  # Postfix Stack Macine
 
         if (lex, tok) == ('=', 'assign_op'):
             tokL = self.tableOfId[lexL][1]
-            print(tokL, tokR)
             if tokL != tokR:
                  print(f'(lexR,tokR)={(lexR, tokR)}\n(lexL,tokL)={(lexL, tokL)}')
                  raise PSMExcept(7)  # типи змінної відрізняється від типу значення
