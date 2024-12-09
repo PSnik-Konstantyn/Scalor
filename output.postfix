@@ -3,27 +3,24 @@
 
 .vars(
    x     Float     
-   y     Float     
 )
 
 .labels(
-   m1    17
-   m2    19
+   m1    20
+   m2    22
 )
 
 .constants(
    10.0  Float     
-   1.0   Float     
    2.1   Float     
    1.2   Float     
+   10.9  Float     
+   1.0   Float     
 )
 
 .code(
    x     l-val
    10.0  Float
-   =     assign_op
-   y     l-val
-   1.0   Float
    =     assign_op
    x     l-val
    2.1   Float
@@ -31,16 +28,26 @@
    +     add_op
    =     assign_op
    x     r-val
-   10.0  Float
+   10.9  Float
    ==    op
    m1    label
    JF    jf
+   x     l-val
    x     r-val
-   OUT   print
+   1.0   Float
+   +     add_op
+   =     assign_op
    m2    label
    JMP   jump
    m1    label
    :     colon
    m2    label
    :     colon
+   x     l-val
+   x     r-val
+   1.0   Float
+   +     add_op
+   =     assign_op
+   x     r-val
+   OUT   print
 )

@@ -231,7 +231,6 @@ class PSM():  # Postfix Stack Macine
         (lexL, tokL) = self.stack.pop()
 
         if (lex, tok) == ('=', 'assign_op'):
-            print('!!!!!!!!!!!!!!!!!!!!!!!!')
             tokL = self.tableOfId[lexL][1]
             print(tokL, tokR)
             if tokL != tokR:
