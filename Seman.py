@@ -149,72 +149,67 @@ class Semantic:
         self.generator.emit("=", "assign_op")
 
     def handle_control_structure(self, line, structure_type):
-        self.get_next_token()
-
-        condition_type = self.evaluate_expression()
+        # Отримати токен для умови
+        condition_type = self.evaluate_expression()  # Симуляція перевірки умови
         if condition_type != "Boolean":
             self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
             return
 
-        self.get_next_token()
+        # Створення міток
+        next_if = self.generator.generate_label()
+        leave = self.generator.generate_label()
 
-        if structure_type == "if":
-            label_false = self.generator.generate_label()
-            self.generator.emit("JF", "lf")
+        # Додавання переходу, якщо умова хибна
+        self.generator.add_JF(next_if)
 
-            self.get_next_token()
-            self.get_next_token()
-            self.get_next_token()
+        # Обробка блоку if
+        self.process_block()
 
-        # {
-            next_if = self.generator.generate_label()
-            leave = self.generator.generate_label()
+        # Перевірка наявності блоку else
+        if self.has_else_block(self.current_index):
+            self.generator.add_JMP(leave)  # Перехід на вихід з блоку
+            self.generator.init_label(next_if)  # Ініціалізація мітки next_if
 
-
-            self.generator.emit("JF", "jf")
-
-
-            self.process_block()
-
-            if self.has_else_block(self.current_index):
-                label_end = self.generator.generate_label()
-                self.generator.emit("JMP", "jump")
-                self.generator.emit(label_false, "label")
-
-                self.current_index = self.current_index - 1
-                next_token = self.get_next_token()
-                if next_token != "else":
-                    self.errors.append(f"Error on line {line}: Expected 'else' after 'if' block.")
-                    return
-                brace_open = self.get_next_token("brace_op")
-                if brace_open != "{":
-                    self.errors.append(f"Error on line {line}: Expected '{{' to start 'else' block.")
-                    return
-                self.process_block()
-            else:
-                self.generator.emit(label_false, "label")
-
-        elif structure_type == "while":
-            loop_start_label = self.generator.generate_label()
-            loop_end_label = self.generator.generate_label()
-
-            self.generator.emit(loop_start_label, "label")
-            condition_type = self.evaluate_expression()
-            if condition_type != "Boolean":
-                self.errors.append(f"Error on line {line}: Condition in 'while' should be boolean.")
+            # Обробка блоку else
+            self.current_index -= 1
+            next_token = self.get_next_token()
+            if next_token != "else":
+                self.errors.append(f"Error on line {line}: Expected 'else' after 'if' block.")
                 return
-            self.generator.emit("JF", loop_end_label)
 
-            # Обробка блоку 'while'
             brace_open = self.get_next_token("brace_op")
             if brace_open != "{":
-                self.errors.append(f"Error on line {line}: Expected '{{' to start 'while' block.")
+                self.errors.append(f"Error on line {line}: Expected '{{' to start 'else' block.")
                 return
-            self.process_block()  # Обробка команд у блоці
 
-            # Повернення до початку циклу
-            self.generator.emit("JMP", loop_start_label)
-            self.generator.emit(loop_end_label, "label")
+            self.process_block()
+        else:
+            self.generator.init_label(next_if)
+
+        # Завершення структури
+        self.generator.init_label(leave)
+
+        # elif structure_type == "while":
+        #     loop_start_label = self.generator.generate_label()
+        #     loop_end_label = self.generator.generate_label()
+        #
+        #     self.generator.emit(loop_start_label, "label")
+        #     condition_type = self.evaluate_expression()
+        #     if condition_type != "Boolean":
+        #         self.errors.append(f"Error on line {line}: Condition in 'while' should be boolean.")
+        #         return
+        #     self.generator.emit("JF", loop_end_label)
+        #
+        #     # Обробка блоку 'while'
+        #     brace_open = self.get_next_token("brace_op")
+        #     if brace_open != "{":
+        #         self.errors.append(f"Error on line {line}: Expected '{{' to start 'while' block.")
+        #         return
+        #     self.process_block()  # Обробка команд у блоці
+        #
+        #     # Повернення до початку циклу
+        #     self.generator.emit("JMP", loop_start_label)
+        #     self.generator.emit(loop_end_label, "label")
 
     def process_block(self):
         while self.current_index < len(self.symbols_table):

@@ -7,7 +7,8 @@
 )
 
 .labels(
-   m0    14
+   m1    17
+   m2    19
 )
 
 .constants(
@@ -32,8 +33,14 @@
    x     r-val
    10.0  Float
    ==    op
-   JF    lf
-   m0    label
+   m1    label
+   JF    jf
    x     r-val
    OUT   print
+   m2    label
+   JMP   jump
+   m1    label
+   :     colon
+   m2    label
+   :     colon
 )
