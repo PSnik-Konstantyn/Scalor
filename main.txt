@@ -1,6 +1,11 @@
 var x : Float = 10.0
-x = 2.1 + 1.2
-if (x == 10.9) {
+x = x + 1.2
+if (x == 3.4) {
     x = x + 1.0
     print(x)
+} else {
+    x = x + 2.0
+    input(x)
+    print(x)
 }
+

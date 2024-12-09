@@ -7,30 +7,28 @@
 
 .labels(
    m1    22
-   m2    24
+   m2    33
 )
 
 .constants(
    10.0  Float     
-   2.1   Float     
    1.2   Float     
-   10.9  Float     
+   3.4   Float     
    1.0   Float     
+   2.0   Float     
 )
 
 .code(
    x     l-val
    10.0  Float
    =     assign_op
-   Bad2  4
-   Bad2  7
    x     l-val
-   2.1   Float
+   x     r-val
    1.2   Float
    +     add_op
    =     assign_op
    x     r-val
-   10.9  Float
+   3.4   Float
    ==    op
    m1    label
    JF    jf
@@ -39,20 +37,21 @@
    1.0   Float
    +     add_op
    =     assign_op
+   x     r-val
+   OUT   print
    m2    label
    JMP   jump
    m1    label
    :     colon
-   m2    label
-   :     colon
-   Stop  28
-   Bad2  19
    x     l-val
    x     r-val
-   1.0   Float
+   2.0   Float
    +     add_op
    =     assign_op
-   Bad1  23
+   x     l-val
+   IN    input
    x     r-val
    OUT   print
+   m2    label
+   :     colon
 )

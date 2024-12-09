@@ -12,10 +12,10 @@ class Semantic:
         self.generator = PostfixGenerator()
 
     def analyze(self):
-        for entry in self.symbols_table:
+        while self.current_index < len(self.symbols_table) - 1:
+            self.current_index += 1
+            entry = self.symbols_table[self.current_index]
             line, lexeme, token_type, additional = entry
-            self.current_index = self.symbols_table.index(entry)
-
             if token_type == "id":
                 if lexeme in ["true", "false"]:
                     continue
@@ -23,21 +23,19 @@ class Semantic:
                     self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before declaration.")
                 elif not self.variables[lexeme]["initialized"]:
                     self.errors.append(f"Error on line {line}: Variable '{lexeme}' used before initialization.")
-            elif token_type == "keyword":
-                if lexeme in ["val", "var"]:
-                    self.handle_declaration(line, lexeme)
-                elif lexeme in ["if", "while"]:
-                    self.handle_control_structure(line, lexeme)
-                elif lexeme == "input":
-                    self.handle_input(line)
-                elif lexeme == "print":
-                    self.generator.emit("Bad1", self.current_index)
-                    self.handle_print(line)
             elif token_type == "assign_op" and lexeme == '=':
-                self.generator.emit("Bad2", self.current_index)
                 self.handle_assignment(line)
             elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
                 self.handle_operation(line, lexeme)
+            elif token_type == "keyword":
+                if lexeme in ["val", "var"]:
+                    self.handle_declaration(line, lexeme)
+                elif lexeme == "input":
+                    self.handle_input(line)
+                elif lexeme == "print":
+                    self.handle_print(line)
+                elif lexeme in ["if", "while"]:
+                    self.handle_control_structure(line, lexeme)
 
         if self.errors:
             for error in self.errors:
@@ -120,6 +118,7 @@ class Semantic:
 
 
             self.generator.emit("=", "assign_op")  # Операція присвоєння
+            self.current_index -= 1
 
     def handle_assignment(self, line):
         var_name = self.get_previous_token("id")
@@ -149,6 +148,7 @@ class Semantic:
 
         self.variables[var_name]["initialized"] = True
         self.generator.emit("=", "assign_op")
+        self.current_index -= 1
 
     def handle_control_structure(self, line, structure_type):
         # Отримати токен для умови
@@ -165,7 +165,6 @@ class Semantic:
         self.generator.emit(next_if, "label")
         self.generator.add_JF(next_if)
 
-        # Обробка блоку if
         self.process_block()
         self.generator.emit(leave, "label")
         self.generator.add_JMP(leave)
@@ -179,7 +178,6 @@ class Semantic:
             # Обробка блоку else
             self.current_index -= 1
             next_token = self.get_next_token()
-            print(next_token)
             if next_token != "else":
                 self.errors.append(f"Error on line {line}: Expected 'else' after 'if' block.")
                 return
@@ -190,11 +188,9 @@ class Semantic:
                 return
 
             self.process_block()  # Розберіть блок else
-            # check
-            self.generator.init_label(leave)
+
 
         self.generator.init_label(leave)
-        self.generator.emit("Stop", self.current_index)
 
     def process_block(self):
         while self.current_index < len(self.symbols_table):
@@ -220,6 +216,7 @@ class Semantic:
                     self.handle_print(line)
             elif token_type == "assign_op" and lexeme == '=':
                 self.handle_assignment(line)
+                self.current_index -= 1
             elif token_type in ["add_op", "mult_op", "divide_op", "comp_op"]:
                 self.handle_operation(line, lexeme)
 
