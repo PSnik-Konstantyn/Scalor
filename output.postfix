@@ -7,13 +7,15 @@
 
 .labels(
    m1    22
-   m2    33
+   m2    31
+   m3    35
+   m4    51
 )
 
 .constants(
    10.0  Float     
    1.2   Float     
-   3.4   Float     
+   5.0   Float     
    1.0   Float     
    2.0   Float     
 )
@@ -28,7 +30,7 @@
    +     add_op
    =     assign_op
    x     r-val
-   3.4   Float
+   5.0   Float
    ==    op
    m1    label
    JF    jf
@@ -48,10 +50,30 @@
    2.0   Float
    +     add_op
    =     assign_op
-   x     l-val
-   IN    input
    x     r-val
    OUT   print
    m2    label
    :     colon
+   x     l-val
+   IN    input
+   m3    label
+   :     colon
+   x     r-val
+   10.0  Float
+   <     op
+   m4    label
+   JF    jf
+   x     l-val
+   x     r-val
+   1.0   Float
+   +     add_op
+   =     assign_op
+   x     r-val
+   OUT   print
+   m3    label
+   JMP   jump
+   m4    label
+   :     colon
+   x     r-val
+   OUT   print
 )

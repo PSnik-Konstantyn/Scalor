@@ -151,46 +151,66 @@ class Semantic:
         self.current_index -= 1
 
     def handle_control_structure(self, line, structure_type):
-        # Отримати токен для умови
-        condition_type = self.evaluate_expression()  # Симуляція перевірки умови
-        if condition_type != "Boolean":
-            self.errors.append(f"Error on line {line}: Condition in '{structure_type}' should be boolean.")
-            return
+        if structure_type == "if":
+            condition_type = self.evaluate_expression()
+            if condition_type != "Boolean":
+                self.errors.append(f"Error on line {line}: Condition in 'if' should be boolean.")
+                return
+            next_if = self.generator.generate_label()
+            leave = self.generator.generate_label()
 
-        # Створення міток
-        next_if = self.generator.generate_label()
-        leave = self.generator.generate_label()
+            # Додавання переходу, якщо умова хибна
+            self.generator.emit(next_if, "label")
+            self.generator.add_JF(next_if)
 
-        # Додавання переходу, якщо умова хибна
-        self.generator.emit(next_if, "label")
-        self.generator.add_JF(next_if)
+            self.process_block()
+            self.generator.emit(leave, "label")
+            self.generator.add_JMP(leave)
 
-        self.process_block()
-        self.generator.emit(leave, "label")
-        self.generator.add_JMP(leave)
+            # Перевірка наявності блоку else
+            if not self.has_else_block(self.current_index):
+                self.generator.init_label(next_if)
+            else:
+                self.generator.init_label(next_if)
 
-        # Перевірка наявності блоку else
-        if not self.has_else_block(self.current_index):
-            self.generator.init_label(next_if)
-        else:
-            self.generator.init_label(next_if)
+                # Обробка блоку else
+                self.current_index -= 1
+                next_token = self.get_next_token()
+                if next_token != "else":
+                    self.errors.append(f"Error on line {line}: Expected 'else' after 'if' block.")
+                    return
 
-            # Обробка блоку else
+                brace_open = self.get_next_token("brace_op")
+                if brace_open != "{":
+                    self.errors.append(f"Error on line {line}: Expected '{{' to start 'else' block.")
+                    return
+
+                self.process_block()  # Розберіть блок else
+
+            self.generator.init_label(leave)
             self.current_index -= 1
-            next_token = self.get_next_token()
-            if next_token != "else":
-                self.errors.append(f"Error on line {line}: Expected 'else' after 'if' block.")
+
+        elif structure_type == "while":
+            loop_start_label = self.generator.generate_label()
+            loop_end_label = self.generator.generate_label()
+
+            self.generator.init_label(loop_start_label)
+
+            condition_type = self.evaluate_expression()
+            if condition_type != "Boolean":
+                self.errors.append(f"Error on line {line}: Condition in 'if' should be boolean.")
                 return
 
-            brace_open = self.get_next_token("brace_op")
-            if brace_open != "{":
-                self.errors.append(f"Error on line {line}: Expected '{{' to start 'else' block.")
-                return
+            self.generator.emit(loop_end_label, "label")
+            self.generator.add_JF(loop_end_label)
 
-            self.process_block()  # Розберіть блок else
+            self.process_block()
 
+            self.generator.emit(loop_start_label, "label")
+            self.generator.add_JMP(loop_start_label)
 
-        self.generator.init_label(leave)
+            self.generator.init_label(loop_end_label)
+            self.current_index -= 1
 
     def process_block(self):
         while self.current_index < len(self.symbols_table):
@@ -273,6 +293,8 @@ class Semantic:
         if self.current_index > 0:
             self.current_index -= 1
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
+            if expected is None:
+                return lexeme
             if expected and token_type != expected:
                 return "undefined_token"
             return lexeme if token_type == expected else "undefined_token"
