@@ -1,9 +1,10 @@
 from Lexer import tableOfSymb
 from Parser import Parser
 from Postfix import PostfixGenerator
+from Semantic import Semantic
 
 
-class Semantic:
+class Poliz:
     def __init__(self, symbols_table):
         self.symbols_table = symbols_table
         self.variables = {}
@@ -40,8 +41,6 @@ class Semantic:
         if self.errors:
             for error in self.errors:
                 print(error)
-        else:
-            print("Semantic analysis completed successfully.")
 
     def handle_input(self, line):
         par_open = self.get_next_token("par_op")
@@ -99,25 +98,23 @@ class Semantic:
             else:
                 self.errors.append(f"Error on line {line}: Variable '{var_name}' redeclared.")
         else:
-            # Додаємо змінну до таблиці змінних
             self.variables[var_name] = {
                 "type": var_type,
-                "initialized": True,  # Завжди ініціалізована
+                "initialized": True,
                 "immutable": decl_type == "val"
             }
             new_v = var_type.lower()
             self.generator.tableOfVar[var_name] = (len(self.generator.tableOfVar) + 1, new_v)
 
-            self.generator.emit(var_name, "l-val")  # Ліва частина присвоєння
-            # Генерація коду для ініціалізації
-            expr_type = self.evaluate_expression()  # Обчислення типу виразу для ініціалізації
+            self.generator.emit(var_name, "l-val")
+            expr_type = self.evaluate_expression()
             if expr_type != "unknown" and expr_type != var_type:
                 self.errors.append(
                     f"Error on line {line}: Type mismatch in initialization of '{var_name}'. Expected {var_type}, but got {expr_type}.")
                 return
 
 
-            self.generator.emit("=", "assign_op")  # Операція присвоєння
+            self.generator.emit("=", "assign_op")
             self.current_index -= 1
 
     def handle_assignment(self, line):
@@ -167,13 +164,11 @@ class Semantic:
             self.generator.emit(leave, "label")
             self.generator.add_JMP(leave)
 
-            # Перевірка наявності блоку else
             if not self.has_else_block(self.current_index):
                 self.generator.init_label(next_if)
             else:
                 self.generator.init_label(next_if)
 
-                # Обробка блоку else
                 self.current_index -= 1
                 next_token = self.get_next_token()
                 if next_token != "else":
@@ -185,7 +180,7 @@ class Semantic:
                     self.errors.append(f"Error on line {line}: Expected '{{' to start 'else' block.")
                     return
 
-                self.process_block()  # Розберіть блок else
+                self.process_block()
 
             self.generator.init_label(leave)
             self.current_index -= 1
@@ -215,7 +210,7 @@ class Semantic:
     def process_block(self):
         while self.current_index < len(self.symbols_table):
             line, lexeme, token_type, _ = self.symbols_table[self.current_index]
-            if lexeme == "}":  # Кінець блоку
+            if lexeme == "}":
                 self.current_index += 1
                 break
             if token_type == "id":
@@ -356,17 +351,15 @@ class Semantic:
 
         current_line, _, _, _ = self.symbols_table[self.current_index]
 
-        operand_stack = []  # Стек для операндів
-        operator_stack = []  # Стек для операторів
+        operand_stack = []
+        operator_stack = []
 
         while self.current_index < len(self.symbols_table):
             line_number, lexeme, token_type, _ = self.symbols_table[self.current_index]
 
-            # Перевірка переходу на новий рядок
             if line_number != current_line:
                 break
 
-            # Обробка констант (Boolean)
             if lexeme in ["false", "true"]:
                 expr_type = self.update_type(expr_type, "Boolean")
                 self.generator.emit(lexeme, "Boolean")
@@ -376,7 +369,6 @@ class Semantic:
                 self.current_index += 1
                 continue
 
-            # Обробка операторів порівняння
             if token_type == "comp_op" or lexeme in ["<=", ">=", "!=", "=="]:
                 found_operator = True
                 expr_type = "Boolean"
@@ -384,46 +376,38 @@ class Semantic:
                 self.current_index += 1
                 continue
 
-            # Обробка чисел (Int, Float)
             if token_type == "int" or lexeme.isdigit():
                 expr_type = self.update_type(expr_type, "Int")
                 self.generator.emit(lexeme, "Int")
                 operand_stack.append(lexeme)
-                # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
                     self.generator.tableOfConst[lexeme] = "Int"
             elif token_type == "float" or self.is_float_literal(lexeme):
                 expr_type = self.update_type(expr_type, "Float")
                 self.generator.emit(lexeme, "Float")
                 operand_stack.append(lexeme)
-                # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
                     self.generator.tableOfConst[lexeme] = "Float"
 
-            # Обробка рядків
             elif token_type == "string":
                 expr_type = self.update_type(expr_type, "String")
                 self.generator.emit(lexeme, "String")
                 operand_stack.append(lexeme)
-                # Збереження у tableOfConst
                 if lexeme not in self.generator.tableOfConst:
                     self.generator.tableOfConst[lexeme] = "String"
 
-            # Обробка змінних
             elif token_type == "id" and lexeme in self.variables:
                 var_type = self.variables[lexeme]["type"]
                 expr_type = self.update_type(expr_type, var_type)
                 self.generator.emit(lexeme, "r-val")
                 operand_stack.append(lexeme)
 
-            # Обробка операторів
             if token_type in ["add_op", "mult_op", "divide_op", "comp_op"] or lexeme in ["+", "-", "*", "/", "^"]:
                 found_operator = True
                 operator_stack.append(lexeme)
 
             self.current_index += 1
 
-        # Генерація коду для всіх операторів у стеку
         while operator_stack:
             if len(operand_stack) < 2:
                 operator = operator_stack.pop()
@@ -437,7 +421,6 @@ class Semantic:
             operator = operator_stack.pop()
             type_of_op = "op"
 
-            # Прив'язка операторів до типів
             if operator in ["+", "-"]:
                 type_of_op = "add_op"
             elif operator == "*":
@@ -445,12 +428,10 @@ class Semantic:
             elif operator == "/":
                 type_of_op = "divide_op"
             elif operator == "^":
-                type_of_op = "pow_op"  # Піднесення до степеня
+                type_of_op = "pow_op"
 
-            # Генерація коду для оператора
             self.generator.emit(operator, type_of_op)
 
-        # Повертаємо тип виразу або "unknown", якщо немає операндів/операторів
         return expr_type if found_operator or expr_type else "unknown"
 
     def update_type(self, current_type, new_type):
@@ -477,16 +458,19 @@ class Semantic:
             return self.variables[operand].get("value", None)
         return None
 
-parser = Parser(tableOfSymb)
-result = parser.parse()
+# parser = Parser(tableOfSymb)
+# result = parser.parse()
+
+check = Semantic(list(tableOfSymb.values()))
+result = check.analyze()
 
 
 def save_postfix_code(file_name, generator, variables):
-    fname = f"{file_name}.postfix"  # Це дозволить передавати правильний тип
+    fname = f"{file_name}.postfix"
     with open(fname, 'w') as f:
         f.write(".target: Postfix Machine\n.version: 0.2\n")
         f.write("\n.vars(\n")
-        for var, var_details in variables.items():  # Використовуємо 'variables' замість 'self.variables'
+        for var, var_details in variables.items():
             f.write(f"   {var:<6}{var_details['type']:<10}\n")
         f.write(")\n")
         f.write("\n.labels(\n")
@@ -501,12 +485,10 @@ def save_postfix_code(file_name, generator, variables):
         f.write(")\n")
         f.write("\n.code(\n")
         for opcode, operand in generator.postfixCodeTSM:
-            # Ensure operand is not None before formatting
             if operand is not None:
                 f.write(f"   {opcode:<6}{operand}\n")
             else:
-                f.write(f"   {opcode:<6}\n")  # Якщо operand = None, вивести лише opcode
-        # Handle case where operand is None
+                f.write(f"   {opcode:<6}\n")
         f.write(")\n")
     print(f"Postfix code saved to {fname}")
 
@@ -514,7 +496,8 @@ def save_postfix_code(file_name, generator, variables):
 
 if result:
     print('\n---------------------\n')
-    analyzer = Semantic(list(tableOfSymb.values()))
+
+    analyzer = Poliz(list(tableOfSymb.values()))
     analyzer.analyze()
     save_postfix_code("output", analyzer.generator, analyzer.variables)
 

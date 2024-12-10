@@ -36,8 +36,10 @@ class Semantic:
         if self.errors:
             for error in self.errors:
                 print(error)
+            return False
         else:
             print("Semantic analysis completed successfully.")
+            return True
 
     def handle_input(self, line):
         self.get_next_token("par_op")
@@ -260,7 +262,7 @@ result = parser.parse()
 
 if result:
     print('\n---------------------\n')
-    analyzer = Semantic(list(tableOfSymb.values()))
-    analyzer.analyze()
+    # analyzer = Semantic(list(tableOfSymb.values()))
+    # analyzer.analyze()
 else:
     print("Semantic analysis aborted due to syntax errors.")

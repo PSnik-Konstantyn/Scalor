@@ -95,7 +95,7 @@ tableOfSymb = {}
 state = initState
 FSuccess = ('Lexer', False)
 
-f = open('main.txt', 'r')
+f = open('main.scalor', 'r')
 sourceCode = f.read()
 sourceCode += '\n'
 f.close()

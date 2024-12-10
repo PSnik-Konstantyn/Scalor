@@ -11,13 +11,13 @@ class PostfixGenerator:
         while label in self.tableOfLabel:
             self.labelCounter += 1
             label = f"m{self.labelCounter}"
-        self.tableOfLabel[label] = "val_undef"  # Мітка ще не ініціалізована
+        self.tableOfLabel[label] = "val_undef"
         return label
 
     def init_label(self, label):
         if label not in self.tableOfLabel:
             raise ValueError(f"Label '{label}' not found in label table.")
-        self.tableOfLabel[label] = len(self.postfixCodeTSM)  # Прив'язка мітки до поточного індексу
+        self.tableOfLabel[label] = len(self.postfixCodeTSM)
         self.postfixCodeTSM.append((label, "label"))
         self.postfixCodeTSM.append((":", "colon"))
 

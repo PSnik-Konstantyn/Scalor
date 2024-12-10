@@ -6,10 +6,10 @@
 )
 
 .labels(
-   m1    25
-   m2    34
-   m3    38
-   m4    54
+   m1    22
+   m2    31
+   m3    35
+   m4    51
 )
 
 .constants(
@@ -23,15 +23,12 @@
 .code(
    x     l-val
    10.0  Float
-   NEG   add_op
    =     assign_op
    x     l-val
    x     r-val
    1.2   Float
    -     add_op
    =     assign_op
-   x     r-val
-   OUT   print
    x     r-val
    5.0   Float
    ==    op

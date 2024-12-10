@@ -5,7 +5,7 @@ import time
 from forParsePostfixProgram import i2f, f2i, getValue
 from stack import Stack
 
-toView = True
+toView = False
 
 
 class PMExcept(Exception):
