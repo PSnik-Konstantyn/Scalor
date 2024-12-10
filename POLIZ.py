@@ -425,9 +425,14 @@ class Semantic:
 
         # Генерація коду для всіх операторів у стеку
         while operator_stack:
-            if len(operand_stack) < 2:  # Перевіряємо, чи вистачає операндів
-                self.errors.append(f"Error: Missing operand for operator '{operator_stack[-1]}'.")
-                break  # Уникаємо зациклення
+            if len(operand_stack) < 2:
+                operator = operator_stack.pop()
+                if operator == "-":
+
+                    self.generator.emit("NEG",  "add_op")
+                else:
+                    self.errors.append(f"Error: Missing operand for operator '{operator_stack[-1]}'.")
+                break
 
             operator = operator_stack.pop()
             type_of_op = "op"
