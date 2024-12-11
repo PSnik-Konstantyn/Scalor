@@ -12,7 +12,7 @@ class PMExcept(Exception):
     pass
 
 
-class PSM():  # Postfix Stack Macine
+class PSM():  # Postfix Stack Machine
     def __init__(self):
         self.tableOfId = {}
         self.tableOfLabel = {}
