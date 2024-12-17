@@ -3,7 +3,6 @@
 
 .vars(
    x     Float     
-   y     Float     
 )
 
 .labels(
@@ -19,8 +18,6 @@
    5.0   Float     
    1.0   Float     
    2.0   Float     
-   2     Int       
-   3     Int       
 )
 
 .code(
@@ -78,14 +75,5 @@
    m4    label
    :     colon
    x     r-val
-   OUT   print
-   y     l-val
-   2.0   Float
-   2     Int
-   3     Int
-   ^     pow_op
-   ^     pow_op
-   =     assign_op
-   y     r-val
    OUT   print
 )

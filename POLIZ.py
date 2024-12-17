@@ -1,6 +1,6 @@
 from Lexer import tableOfSymb
-from Parser import Parser
 from Postfix import PostfixGenerator
+from SaveCIL import saveCIL
 from Semantic import Semantic
 
 
@@ -156,7 +156,6 @@ class Poliz:
             next_if = self.generator.generate_label()
             leave = self.generator.generate_label()
 
-            # Додавання переходу, якщо умова хибна
             self.generator.emit(next_if, "label")
             self.generator.add_JF(next_if)
 
@@ -500,7 +499,7 @@ if result:
     analyzer = Poliz(list(tableOfSymb.values()))
     analyzer.analyze()
     save_postfix_code("output", analyzer.generator, analyzer.variables)
-
+    saveCIL("example", analyzer.generator.tableOfVar, analyzer.generator.postfixCodeTSM)
 
 else:
     print("Semantic analysis aborted due to syntax errors.")
