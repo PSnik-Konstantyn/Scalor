@@ -42,6 +42,18 @@ class Poliz:
             for error in self.errors:
                 print(error)
 
+    def format_types(self):
+        type_mapping = {
+            "int": "Int",
+            "float": "Float",
+            "boolean": "Boolean"
+        }
+
+        self.generator.tableOfVar = {
+            var: type_mapping.get(value[1].lower(), value[1])
+            for var, value in self.generator.tableOfVar.items()
+        }
+
     def handle_input(self, line):
         par_open = self.get_next_token("par_op")
         if par_open != "(":
@@ -496,8 +508,14 @@ def save_postfix_code(file_name, generator, variables):
 if result:
     print('\n---------------------\n')
 
+
+
+
+
+
     analyzer = Poliz(list(tableOfSymb.values()))
     analyzer.analyze()
+    analyzer.format_types()
     save_postfix_code("output", analyzer.generator, analyzer.variables)
     saveCIL("example", analyzer.generator.tableOfVar, analyzer.generator.postfixCodeTSM)
 

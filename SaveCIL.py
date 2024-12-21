@@ -1,6 +1,8 @@
 def saveCIL(file_name, table_of_vars, postfix_code):
     def get_il_type(var_name):
+        print(table_of_vars)
         var_type = table_of_vars.get(var_name)
+        print(var_type)
         types_map = {
             'Float': 'float32',
             'Int': 'int32',
@@ -35,7 +37,7 @@ def saveCIL(file_name, table_of_vars, postfix_code):
                 var_type = table_of_vars[token]
                 prev_type = {'Int': 'int', 'Float': 'float'}.get(var_type, 'bool')
 
-                is_readline = index + 1 < len(postfix_code) and postfix_code[index + 1][1] == 'input'
+                is_readline = index + 1 < len(postfix_code) and postfix_code[index + 1][1] == 'readline'
                 prev_var = token
 
                 if token_type == 'l-val' and not is_readline:
@@ -43,7 +45,7 @@ def saveCIL(file_name, table_of_vars, postfix_code):
                 elif token_type == 'r-val':
                     code_lines.append(f"   ldloc    {token}")
 
-            elif token_type == 'intnum':
+            elif token_type == 'Int':
                 code_lines.append(f"   ldc.i4    {token}")
                 if prev_type == 'float':
                     code_lines.append("   conv.r4")
@@ -70,7 +72,7 @@ def saveCIL(file_name, table_of_vars, postfix_code):
                 code_lines.append(f'   stloc {prev_var}')
                 prev_type = ''
 
-            elif token_type == 'rel_op':
+            elif token_type == 'op':
                 code_lines.append({
                                       '>': "   cgt",
                                       '<': "   clt",
@@ -104,8 +106,6 @@ def saveCIL(file_name, table_of_vars, postfix_code):
                 prev_type = "bool"
         return "\n".join(code_lines)
 
-    print(table_of_vars)
-    print(postfix_code)
     fname = file_name + ".il"
     header = f"""// Referenced Assemblies.
 .assembly extern mscorlib

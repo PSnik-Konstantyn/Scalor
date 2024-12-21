@@ -41,3 +41,4 @@ class PostfixGenerator:
             self.tableOfConst[const_value] = (len(self.tableOfConst), const_type)
         else:
             print(f"Warning: Constant '{const_value}' is already defined.")
+

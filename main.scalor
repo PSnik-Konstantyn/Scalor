@@ -1,19 +1,5 @@
-var x : Float = 10.0
-x = x - 1.2
-
-if (x == 5.0) {
-    x = x + 1.0
-    print(x)
-} else {
-    x = x + 2.0
-    print(x)
-}
-
-input(x)
-
-while (x < 10.0) {
-    x = x + 1.0
-    print(x)
-}
-
-print(x)
+var n10: Int = 1
+n10 = n10 + 2
+print(n10)
+input(n10)
+print(n10)
