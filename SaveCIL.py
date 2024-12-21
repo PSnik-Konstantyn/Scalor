@@ -1,8 +1,8 @@
 def saveCIL(file_name, table_of_vars, postfix_code):
     def get_il_type(var_name):
         print(table_of_vars)
+        print(postfix_code)
         var_type = table_of_vars.get(var_name)
-        print(var_type)
         types_map = {
             'Float': 'float32',
             'Int': 'int32',
@@ -37,7 +37,7 @@ def saveCIL(file_name, table_of_vars, postfix_code):
                 var_type = table_of_vars[token]
                 prev_type = {'Int': 'int', 'Float': 'float'}.get(var_type, 'bool')
 
-                is_readline = index + 1 < len(postfix_code) and postfix_code[index + 1][1] == 'readline'
+                is_readline = index + 1 < len(postfix_code) and postfix_code[index + 1][1] == 'input'
                 prev_var = token
 
                 if token_type == 'l-val' and not is_readline:
@@ -95,7 +95,7 @@ def saveCIL(file_name, table_of_vars, postfix_code):
                     prev_type = 'float'
                 code_lines.append(operation)
 
-            elif token_type == 'power_op':
+            elif token_type == 'pow_op':
                 if prev_type == 'int':
                     code_lines.append('   conv.r8')
                 code_lines.append("   call   float64 [mscorlib]System.Math::Pow(float64, float64)")

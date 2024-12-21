@@ -2,30 +2,28 @@
 .version: 0.2
 
 .vars(
-   n10   Int       
+   n10   Float     
 )
 
 .labels(
 )
 
 .constants(
-   1     Int       
+   1.0   Float     
    2     Int       
 )
 
 .code(
    n10   l-val
-   1     Int
+   1.0   Float
    =     assign_op
    n10   l-val
    n10   r-val
    2     Int
+   2     Int
+   ^     pow_op
    +     add_op
    =     assign_op
-   n10   r-val
-   OUT   print
-   n10   l-val
-   IN    input
    n10   r-val
    OUT   print
 )
