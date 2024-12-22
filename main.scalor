@@ -1,8 +1,9 @@
 var n10: Float = 1.0
-n10 = n10 + 2^2.1^2
+n10 = -2 + n10 + 2^2^3
 print(n10)
 input(n10)
 print(n10)
+print("Hello World!")
 if (n10 > 2){
     print(n10)
 } else {
