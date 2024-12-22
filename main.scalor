@@ -1,3 +1,16 @@
 var n10: Float = 1.0
-n10 = n10 + 2^2
+n10 = n10 + 2^2.1^2
 print(n10)
+input(n10)
+print(n10)
+if (n10 > 2){
+    print(n10)
+} else {
+    n10 = n10 + 10.0
+    print(n10)
+}
+
+while (n10 > 3) {
+     print(n10)
+     n10 = n10 - 1.0
+}

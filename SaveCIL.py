@@ -1,7 +1,5 @@
 def saveCIL(file_name, table_of_vars, postfix_code):
     def get_il_type(var_name):
-        print(table_of_vars)
-        print(postfix_code)
         var_type = table_of_vars.get(var_name)
         types_map = {
             'Float': 'float32',

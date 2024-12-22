@@ -89,10 +89,26 @@ class Poliz:
             self.errors.append(f"Помилка на лінії {line}: Очікувалось ім'я змінної або константа для 'print'.")
             return
 
-        self.generator.emit(value, "r-val")
-        self.generator.emit("OUT", "print")
+        if value.isdigit():
+            self.generator.emit(value, "Int")
+        else:
+            try:
+                float(value)
+                self.generator.emit(value, "Float")
+            except ValueError:
+                if value in ('true', 'false'):
+                    self.generator.emit(value, "Boolean")
+                elif value.startswith('"') and value.endswith('"'):
+                    self.generator.emit(value, "String")
+                else:
+                    if value not in self.variables:
+                        self.errors.append(
+                            f"Error on line {line}: Variable '{value}' used in 'input' before declaration.")
+                        return
+                    self.generator.emit(value, "r-val")
 
-        self.get_next_token("par_op")
+
+        self.generator.emit("OUT", "print")
 
     def handle_declaration(self, line, decl_type):
         var_name = self.get_next_token("id")
