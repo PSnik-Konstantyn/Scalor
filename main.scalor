@@ -1,5 +1,7 @@
 var x: Float = -1.0
-x = x + 2.0
+x = x + 2.0 ^ 2 ^ 3
+// val y: Int = -8
+// print(y)
 print(x)
 input(x)
 print(x)

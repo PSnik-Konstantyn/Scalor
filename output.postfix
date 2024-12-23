@@ -6,18 +6,18 @@
 )
 
 .labels(
-   m1    24
-   m2    33
-   m3    35
-   m4    51
+   m1    28
+   m2    37
+   m3    39
+   m4    55
 )
 
 .constants(
    1.0   Float     
    2.0   Float     
    2     Int       
-   8.0   Float     
    3     Int       
+   8.0   Float     
 )
 
 .code(
@@ -28,6 +28,10 @@
    x     l-val
    x     r-val
    2.0   Float
+   2     Int
+   3     Int
+   ^     pow_op
+   ^     pow_op
    +     add_op
    =     assign_op
    x     r-val

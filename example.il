@@ -31,6 +31,12 @@
    ldloca    x
    ldloc    x
    ldc.r4    2.0
+   ldc.i4    2
+   conv.r4
+   ldc.i4    3
+   conv.r8
+   call   float64 [mscorlib]System.Math::Pow(float64, float64)
+   call   float64 [mscorlib]System.Math::Pow(float64, float64)
    add
    stind.r4
    ldloc    x
