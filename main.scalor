@@ -1,17 +1,17 @@
-var n10: Float = 1.0
-n10 = -2 + n10 + 2^2^3
-print(n10)
-input(n10)
-print(n10)
-print("Hello World!")
-if (n10 > 2){
-    print(n10)
+var x: Float = -1.0
+x = x + 2.0
+print(x)
+input(x)
+print(x)
+
+if (x == 2){
+    print(x)
 } else {
-    n10 = n10 + 10.0
-    print(n10)
+    x = x + 8.0
+    print(x)
 }
 
-while (n10 > 3) {
-     print(n10)
-     n10 = n10 - 1.0
+while (x > 3) {
+     print(x)
+     x = x - 1.0
 }

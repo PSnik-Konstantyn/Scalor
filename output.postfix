@@ -2,74 +2,75 @@
 .version: 0.2
 
 .vars(
-   n10   Float     
+   x     Float     
 )
 
 .labels(
-   m1    27
-   m2    36
-   m3    38
-   m4    54
+   m1    28
+   m2    37
+   m3    39
+   m4    55
 )
 
 .constants(
    1.0   Float     
+   2.0   Float     
    2     Int       
-   2.1   Float     
-   10.0  Float     
    3     Int       
+   8.0   Float     
 )
 
 .code(
-   n10   l-val
+   x     l-val
    1.0   Float
+   NEG   add_op
    =     assign_op
-   n10   l-val
-   n10   r-val
+   x     l-val
+   x     r-val
+   2.0   Float
    2     Int
-   2.1   Float
-   2     Int
+   3     Int
    ^     pow_op
    ^     pow_op
    +     add_op
    =     assign_op
-   n10   r-val
+   x     r-val
    OUT   print
-   n10   l-val
+   x     l-val
    IN    input
-   n10   r-val
+   x     r-val
    OUT   print
-   n10   r-val
+   x     r-val
    2     Int
-   >     op
+   ==    op
    m1    label
    JF    jf
-   n10   r-val
+   x     r-val
    OUT   print
    m2    label
    JMP   jump
    m1    label
    :     colon
-   n10   l-val
-   n10   r-val
-   10.0  Float
+   x     l-val
+   x     r-val
+   8.0   Float
    +     add_op
    =     assign_op
-   n10   r-val
+   x     r-val
    OUT   print
    m2    label
    :     colon
    m3    label
    :     colon
-   n10   r-val
+   x     r-val
    3     Int
    >     op
    m4    label
    JF    jf
-   n10   r-val
+   x     r-val
    OUT   print
-   n10   l-val
-   n10   r-val
+   x     l-val
+   x     r-val
    1.0   Float
    -     add_op
    =     assign_op
