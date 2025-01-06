@@ -28,47 +28,17 @@
    ldc.r4    1.0
    neg
    stind.r4
-   ldloca    x
-   ldloc    x
-   ldc.r4    2.0
-   ldc.i4    2
-   conv.r4
-   ldc.i4    3
-   conv.r8
-   call   float64 [mscorlib]System.Math::Pow(float64, float64)
-   call   float64 [mscorlib]System.Math::Pow(float64, float64)
-   add
-   stind.r4
-   ldloc    x
-   call void [mscorlib]System.Console::WriteLine(float32)
    call    string [mscorlib]System.Console::ReadLine()
    call float32 [mscorlib]System.Single::Parse(string)
    stloc x
    ldloc    x
    call void [mscorlib]System.Console::WriteLine(float32)
+m1:
    ldloc    x
    ldc.i4    2
    conv.r4
-   ceq
-   brfalse    m1
-   ldloc    x
-   call void [mscorlib]System.Console::WriteLine(float32)
-   br    m2
-m1:
-   ldloca    x
-   ldloc    x
-   ldc.r4    8.0
-   add
-   stind.r4
-   ldloc    x
-   call void [mscorlib]System.Console::WriteLine(float32)
-m2:
-m3:
-   ldloc    x
-   ldc.i4    3
-   conv.r4
    cgt
-   brfalse    m4
+   brfalse    m2
    ldloc    x
    call void [mscorlib]System.Console::WriteLine(float32)
    ldloca    x
@@ -76,8 +46,8 @@ m3:
    ldc.r4    1.0
    sub
    stind.r4
-   br    m3
-m4:
+   br    m1
+m2:
 	ret    
 }
 }

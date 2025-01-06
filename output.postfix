@@ -6,18 +6,13 @@
 )
 
 .labels(
-   m1    28
-   m2    37
-   m3    39
-   m4    55
+   m1    8
+   m2    24
 )
 
 .constants(
    1.0   Float     
-   2.0   Float     
    2     Int       
-   3     Int       
-   8.0   Float     
 )
 
 .code(
@@ -26,46 +21,15 @@
    NEG   add_op
    =     assign_op
    x     l-val
-   x     r-val
-   2.0   Float
-   2     Int
-   3     Int
-   ^     pow_op
-   ^     pow_op
-   +     add_op
-   =     assign_op
-   x     r-val
-   OUT   print
-   x     l-val
    IN    input
    x     r-val
    OUT   print
+   m1    label
+   :     colon
    x     r-val
    2     Int
-   ==    op
-   m1    label
-   JF    jf
-   x     r-val
-   OUT   print
-   m2    label
-   JMP   jump
-   m1    label
-   :     colon
-   x     l-val
-   x     r-val
-   8.0   Float
-   +     add_op
-   =     assign_op
-   x     r-val
-   OUT   print
-   m2    label
-   :     colon
-   m3    label
-   :     colon
-   x     r-val
-   3     Int
    >     op
-   m4    label
+   m2    label
    JF    jf
    x     r-val
    OUT   print
@@ -74,8 +38,8 @@
    1.0   Float
    -     add_op
    =     assign_op
-   m3    label
+   m1    label
    JMP   jump
-   m4    label
+   m2    label
    :     colon
 )

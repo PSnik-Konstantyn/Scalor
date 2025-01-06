@@ -1,19 +1,7 @@
 var x: Float = -1.0
-x = x + 2.0 ^ 2 ^ 3
-// val y: Int = -8
-// print(y)
-print(x)
 input(x)
 print(x)
-
-if (x == 2){
+while (x > 2) {
     print(x)
-} else {
-    x = x + 8.0
-    print(x)
-}
-
-while (x > 3) {
-     print(x)
-     x = x - 1.0
+    x = x - 1.0
 }
