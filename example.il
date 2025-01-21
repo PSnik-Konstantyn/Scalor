@@ -11,6 +11,7 @@
   .hash algorithm 0x00008004
   .ver 0:0:0:0
 }
+
 .module example.exe
 
 // Definition of Program class.
