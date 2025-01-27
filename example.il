@@ -5,6 +5,7 @@
   .ver 4:0:0:0
 }
 
+
 // Our assembly.
 .assembly example
 {
