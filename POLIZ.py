@@ -4,6 +4,26 @@ from SaveCIL import saveCIL
 from Semantic import Semantic
 
 
+def find_next_if_or_else(start_index):
+
+    for index in range(start_index, len(tableOfSymb) + 1):
+        token = tableOfSymb.get(index)
+        if token and token[1] in {"if", "else"}:
+            return token[1], index
+    return None
+
+
+def has_else_block(start_index):
+    next_token = find_next_if_or_else(start_index + 1)
+    if next_token:
+        token_type, token_index = next_token
+        if token_type == "else":
+            return True
+        elif token_type == "if":
+            return False
+    return False
+
+
 class Poliz:
     def __init__(self, symbols_table):
         self.symbols_table = symbols_table
@@ -191,7 +211,7 @@ class Poliz:
             self.generator.emit(leave, "label")
             self.generator.add_JMP(leave)
 
-            if not self.has_else_block(self.current_index):
+            if not has_else_block(self.current_index):
                 self.generator.init_label(next_if)
             else:
                 self.generator.init_label(next_if)
@@ -263,24 +283,6 @@ class Poliz:
                 self.handle_operation(line, lexeme)
 
             self.current_index += 1
-
-    def find_next_if_or_else(self, start_index):
-
-        for index in range(start_index, len(tableOfSymb) + 1):
-            token = tableOfSymb.get(index)
-            if token and token[1] in {"if", "else"}:
-                return token[1], index
-        return None
-
-    def has_else_block(self, start_index):
-        next_token = self.find_next_if_or_else(start_index + 1)
-        if next_token:
-            token_type, token_index = next_token
-            if token_type == "else":
-                return True
-            elif token_type == "if":
-                return False
-        return False
 
     def get_next_token(self, expected=None):
         self.current_index += 1
@@ -523,11 +525,6 @@ def save_postfix_code(file_name, generator, variables):
 
 if result:
     print('\n---------------------\n')
-
-
-
-
-
 
     analyzer = Poliz(list(tableOfSymb.values()))
     analyzer.analyze()
