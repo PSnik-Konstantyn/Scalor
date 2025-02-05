@@ -1,6 +1,7 @@
 var x: Float = -1.0
 input(x)
 print(x)
+val y : Int = 2*4-1
 while (x > 2) {
     print(x)
     x = x - 1.0

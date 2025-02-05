@@ -3,16 +3,19 @@
 
 .vars(
    x     Float     
+   y     Int       
 )
 
 .labels(
-   m1    8
-   m2    24
+   m1    15
+   m2    31
 )
 
 .constants(
    1.0   Float     
    2     Int       
+   4     Int       
+   1     Int       
 )
 
 .code(
@@ -24,6 +27,13 @@
    IN    input
    x     r-val
    OUT   print
+   y     l-val
+   2     Int
+   4     Int
+   1     Int
+   -     add_op
+   *     mult_op
+   =     assign_op
    m1    label
    :     colon
    x     r-val

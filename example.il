@@ -4,6 +4,7 @@
   .publickeytoken = (B7 7A 5C 56 19 34 E0 89 ) 
   .ver 4:0:0:0
 }
+
 // Our assembly.
 .assembly example
 {
@@ -20,7 +21,8 @@
     .method private hidebysig static void Main(string[] args) cil managed
     {
     .locals (
-       [0]  float32 x     )
+       [0]  float32 x,
+       [1]  int32 y     )
    .entrypoint
    //.maxstack  8
    ldloca    x
@@ -32,6 +34,14 @@
    stloc x
    ldloc    x
    call void [mscorlib]System.Console::WriteLine(float32)
+   ldloca    y
+   ldc.i4    2
+   ldc.i4    4
+   ldc.i4    1
+   sub
+   conv.r4
+   mul
+   stind.r4
 m1:
    ldloc    x
    ldc.i4    2

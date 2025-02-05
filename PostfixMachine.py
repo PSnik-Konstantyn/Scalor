@@ -1,7 +1,3 @@
-# завантаження ПОЛІЗ-програми у форматі .postfix
-import re
-import time
-
 from forParsePostfixProgram import i2f, f2i, getValue
 from stack import Stack
 
@@ -11,8 +7,7 @@ toView = False
 class PMExcept(Exception):
     pass
 
-
-class PSM():  # Postfix Stack Machine
+class PSM():
     def __init__(self):
         self.tableOfId = {}
         self.tableOfLabel = {}
@@ -35,7 +30,6 @@ class PSM():  # Postfix Stack Machine
             print(f'-=-=-=========({lex},{tok})  numInstr={self.numInstr}')
         return True
 
-    # завантаження ПОЛІЗ-програми у форматі .postfix
     def loadPostfixFile(self, fileName):
         try:
             self.fileName = fileName + ".postfix"
@@ -63,7 +57,7 @@ class PSM():  # Postfix Stack Machine
         self.parseSection("ConstDecl")
         # print("have const ")
 
-        self.parseSection("Code")  # mapDebug:: numInstr -> numLine
+        self.parseSection("Code")
         # print("have code ")
 
     def parseHeader(self, header):

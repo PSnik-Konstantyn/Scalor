@@ -200,8 +200,6 @@ class Semantic:
             if line_number != current_line:
                 break
 
-          #  print(f'{line_number} _____ {lexeme}')
-
             if lexeme in ["false", "true"]:
                 expr_type = "Boolean"
                 break

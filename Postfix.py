@@ -1,9 +1,9 @@
 class PostfixGenerator:
     def __init__(self):
-        self.tableOfVar = {}  # Таблиця змінних
-        self.tableOfLabel = {}  # Таблиця міток
-        self.tableOfConst = {}  # Таблиця констант
-        self.postfixCodeTSM = []  # Постфіксний код
+        self.tableOfVar = {}
+        self.tableOfLabel = {}
+        self.tableOfConst = {}
+        self.postfixCodeTSM = []
         self.labelCounter = 1
 
     def generate_label(self):
